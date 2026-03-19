@@ -516,6 +516,11 @@
     .mbtn-copy   { background: #67e8f9; color: #0e7490; }
     .mbtn-yellow { background: #fcd34d; color: white; }
 
+    .skin-picker { display:flex; align-items:center; justify-content:center; gap:5px; margin-bottom:6px; flex-wrap:wrap; }
+    .skin-swatch { width:20px; height:20px; border-radius:50%; cursor:pointer; border:3px solid transparent; transition:all 0.15s; }
+    .skin-swatch:hover { transform:scale(1.2); }
+    .skin-swatch.active-skin { border-color:#c084fc; }
+
     @media (max-width: 700px) {
       .game-area { flex-direction: column; align-items: center; }
       .clothes-panel, .right-panel { width: 100%; max-width: 380px; }
@@ -651,22 +656,26 @@
     <div class="character-display">
       <div class="char-wrap">
         <svg viewBox="0 0 150 285" xmlns="http://www.w3.org/2000/svg">
-          <ellipse cx="75" cy="44" rx="28" ry="32" fill="#b0b0b0" stroke="#888888" stroke-width="1.5"/>
+          <!-- Hair renders BEHIND the face so it doesn't cover it -->
+          <g id="hair-layer"></g>
+          <!-- Body -->
+          <rect id="torso-base" class="skin-part" x="40" y="84" width="70" height="76" rx="8" fill="#b8b8b8"/>
+          <rect id="arm-left" class="skin-part" x="18" y="86" width="22" height="58" rx="9" fill="#b0b0b0"/>
+          <rect id="arm-right" class="skin-part" x="110" y="86" width="22" height="58" rx="9" fill="#b0b0b0"/>
+          <rect id="leg-left" class="skin-part" x="44" y="158" width="26" height="72" rx="6" fill="#b0b0b0"/>
+          <rect id="leg-right" class="skin-part" x="80" y="158" width="26" height="72" rx="6" fill="#b0b0b0"/>
+          <ellipse id="foot-left" class="skin-dark" cx="57" cy="233" rx="15" ry="6" fill="#999999"/>
+          <ellipse id="foot-right" class="skin-dark" cx="93" cy="233" rx="15" ry="6" fill="#999999"/>
+          <!-- Head and face render ON TOP of hair -->
+          <ellipse id="head" class="skin-part" cx="75" cy="44" rx="28" ry="32" fill="#b0b0b0" stroke="#888888" stroke-width="1.5"/>
           <ellipse cx="65" cy="42" rx="3.5" ry="4.5" fill="#333"/>
           <ellipse cx="85" cy="42" rx="3.5" ry="4.5" fill="#333"/>
           <circle cx="66" cy="40.5" r="1.3" fill="white"/>
           <circle cx="86" cy="40.5" r="1.3" fill="white"/>
           <path d="M 67 53 Q 75 61 83 53" stroke="#888888" stroke-width="1.5" fill="none" stroke-linecap="round"/>
           <ellipse cx="75" cy="49" rx="2" ry="1.5" fill="#888888" opacity="0.4"/>
-          <rect x="65" y="73" width="20" height="13" fill="#b0b0b0"/>
-          <rect id="torso-base" x="40" y="84" width="70" height="76" rx="8" fill="#b8b8b8"/>
-          <rect x="18" y="86" width="22" height="58" rx="9" fill="#b0b0b0"/>
-          <rect x="110" y="86" width="22" height="58" rx="9" fill="#b0b0b0"/>
-          <rect x="44" y="158" width="26" height="72" rx="6" fill="#b0b0b0"/>
-          <rect x="80" y="158" width="26" height="72" rx="6" fill="#b0b0b0"/>
-          <ellipse cx="57" cy="233" rx="15" ry="6" fill="#999999"/>
-          <ellipse cx="93" cy="233" rx="15" ry="6" fill="#999999"/>
-          <g id="hair-layer"></g>
+          <rect id="neck" class="skin-part" x="65" y="73" width="20" height="13" fill="#b0b0b0"/>
+          <!-- Clothing renders on top -->
           <g id="top-layer"></g>
           <g id="bottom-layer"></g>
           <g id="shoes-layer"></g>
@@ -678,6 +687,15 @@
       </div>
     </div>
 
+    <div class="skin-picker">
+      <span style="font-size:10px;color:#aaa;margin-right:4px;">Skin:</span>
+      <div class="skin-swatch active-skin" style="background:#b0b0b0" onclick="setSkinTone('#b0b0b0','#999999',this)" title="Mannequin"></div>
+      <div class="skin-swatch" style="background:#FFD6B0" onclick="setSkinTone('#FFD6B0','#E8B88A',this)" title="Fair"></div>
+      <div class="skin-swatch" style="background:#EEB78A" onclick="setSkinTone('#EEB78A','#D49A6A',this)" title="Light"></div>
+      <div class="skin-swatch" style="background:#C68642" onclick="setSkinTone('#C68642','#A86C30',this)" title="Medium"></div>
+      <div class="skin-swatch" style="background:#8D5524" onclick="setSkinTone('#8D5524','#6D3510',this)" title="Brown"></div>
+      <div class="skin-swatch" style="background:#4A2511" onclick="setSkinTone('#4A2511','#2A1001',this)" title="Deep"></div>
+    </div>
     <div class="action-buttons">
       <button class="action-btn btn-reset"  onclick="resetOutfit()">🔄</button>
       <button class="action-btn btn-bag"    onclick="openOverlay('bagOverlay')">🛍️ Bag</button>
@@ -904,6 +922,8 @@ let currentCategory = 'tops';
 let currentMode = 'normal';
 let vipUnlocked = false;
 let outfit = {};
+let skinColor = '#b0b0b0';
+let skinDarkColor = '#999999';
 let shoppingBag = []; // [{cat, idx, item}]
 let favorites = [];   // [{name, emojis, outfit snapshot}]
 let leaderboard = []; // [{name, emoji, score, look}]
@@ -1316,7 +1336,22 @@ function updateCharacterLayers() {
     const accIdx = outfit['accessories'];
     if (accIdx !== null && accIdx !== undefined) {
       const item = wardrobe[gender]['accessories']?.[accIdx];
-      if (item) combined += `<text x="75" y="72" font-size="22" text-anchor="middle" dominant-baseline="middle">${item.emoji}</text>`;
+      if (item) {
+        const an = item.name.toLowerCase();
+        let ax=75, ay=80, asize=24;
+        if (an.includes('crown') || an.includes('tiara') || an.includes('beanie') || an.includes('helmet') || an.includes('bow') || an.includes('hat') || an.includes('beret') || an.includes('clip') || an.includes('pin') || an.includes('band')) {
+          ax=75; ay=20; asize=26; // top of head
+        } else if (an.includes('glass') || an.includes('sunglass')) {
+          ax=75; ay=42; asize=26; // on face
+        } else if (an.includes('earring') || an.includes('stud')) {
+          ax=75; ay=50; asize=20; // ears area
+        } else if (an.includes('necklace') || an.includes('choker') || an.includes('pendant') || an.includes('scarf')) {
+          ax=75; ay=82; asize=22; // neck
+        } else {
+          ax=75; ay=55; asize=24; // default mid-face/neck
+        }
+        combined += `<text x="${ax}" y="${ay}" font-size="${asize}" text-anchor="middle" dominant-baseline="middle">${item.emoji}</text>`;
+      }
     }
     const bagIdx = outfit['bags'];
     if (bagIdx !== null && bagIdx !== undefined) {
@@ -1411,47 +1446,77 @@ function getHairSVG(name) {
 function getTopSVG(name) {
   const n = name.toLowerCase();
   const color = getItemColor(name);
+  const c2 = adjustColor(color, -25);
+  const c3 = adjustColor(color, 25);
 
-  if (n.includes('bikini') || n.includes('swim shirt') || n.includes('bra')) {
-    return `<rect x="44" y="84" width="62" height="32" rx="8" fill="${color}"/>`;
+  if (n.includes('bikini') || (n.includes('swim') && !n.includes('shirt'))) {
+    return `<rect x="44" y="84" width="62" height="30" rx="8" fill="${color}"/>` +
+           `<rect x="44" y="84" width="62" height="6" rx="3" fill="${c2}" opacity="0.5"/>` +
+           `<line x1="75" y1="84" x2="75" y2="114" stroke="${c2}" stroke-width="2" opacity="0.4"/>`;
   }
-  if (n.includes('tank') || n.includes('tube') || n.includes('corset')) {
-    return `<rect x="47" y="84" width="56" height="68" rx="6" fill="${color}"/>`;
+  if (n.includes('tank') || n.includes('tube')) {
+    return `<rect x="47" y="84" width="56" height="70" rx="6" fill="${color}"/>` +
+           `<rect x="47" y="84" width="56" height="8" rx="4" fill="${c2}" opacity="0.4"/>`;
+  }
+  if (n.includes('corset')) {
+    return `<rect x="46" y="84" width="58" height="68" rx="6" fill="${color}"/>` +
+           `<line x1="65" y1="88" x2="65" y2="150" stroke="${c2}" stroke-width="1.5" opacity="0.5"/>` +
+           `<line x1="75" y1="88" x2="75" y2="150" stroke="${c2}" stroke-width="1.5" opacity="0.5"/>` +
+           `<line x1="85" y1="88" x2="85" y2="150" stroke="${c2}" stroke-width="1.5" opacity="0.5"/>`;
   }
   if (n.includes('crop')) {
     return `<rect x="40" y="84" width="70" height="42" rx="6" fill="${color}"/>` +
-           `<rect x="18" y="86" width="22" height="28" rx="8" fill="${color}"/>` +
-           `<rect x="110" y="86" width="22" height="28" rx="8" fill="${color}"/>`;
+           `<rect x="18" y="86" width="22" height="26" rx="8" fill="${color}"/>` +
+           `<rect x="110" y="86" width="22" height="26" rx="8" fill="${color}"/>` +
+           `<rect x="40" y="84" width="70" height="7" rx="3" fill="${c2}" opacity="0.4"/>`;
   }
-  if (n.includes('puffer') || n.includes('jacket') || n.includes('blazer')) {
-    const c2 = color === '#f0f0f0' ? '#e0e0e0' : adjustColor(color, -20);
-    return `<rect x="36" y="82" width="78" height="76" rx="8" fill="${color}"/>` +
-           `<rect x="14" y="84" width="24" height="54" rx="9" fill="${color}"/>` +
-           `<rect x="112" y="84" width="24" height="54" rx="9" fill="${color}"/>` +
-           `<rect x="70" y="82" width="10" height="76" fill="${c2}" opacity="0.3"/>`;
+  if (n.includes('puffer') || n.includes('puff')) {
+    return `<rect x="36" y="82" width="78" height="76" rx="10" fill="${color}"/>` +
+           `<rect x="14" y="84" width="24" height="52" rx="10" fill="${color}"/>` +
+           `<rect x="112" y="84" width="24" height="52" rx="10" fill="${color}"/>` +
+           `<rect x="36" y="98" width="78" height="6" rx="3" fill="${c2}" opacity="0.3"/>` +
+           `<rect x="36" y="114" width="78" height="6" rx="3" fill="${c2}" opacity="0.3"/>` +
+           `<rect x="36" y="130" width="78" height="6" rx="3" fill="${c2}" opacity="0.3"/>` +
+           `<line x1="75" y1="84" x2="75" y2="158" stroke="${c2}" stroke-width="2" opacity="0.3"/>`;
   }
-  if (n.includes('sweater') || n.includes('knit') || n.includes('cozy')) {
-    const c2 = adjustColor(color, -15);
+  if (n.includes('jacket') || n.includes('blazer')) {
+    return `<rect x="36" y="82" width="78" height="76" rx="6" fill="${color}"/>` +
+           `<rect x="14" y="84" width="24" height="52" rx="8" fill="${color}"/>` +
+           `<rect x="112" y="84" width="24" height="52" rx="8" fill="${color}"/>` +
+           `<polygon points="62,84 75,102 88,84" fill="${c2}" opacity="0.5"/>` +
+           `<rect x="72" y="104" width="6" height="42" fill="${c2}" opacity="0.3"/>` +
+           `<circle cx="75" cy="112" r="2.5" fill="${c2}" opacity="0.7"/>` +
+           `<circle cx="75" cy="124" r="2.5" fill="${c2}" opacity="0.7"/>` +
+           `<circle cx="75" cy="136" r="2.5" fill="${c2}" opacity="0.7"/>`;
+  }
+  if (n.includes('sweater') || n.includes('knit') || n.includes('cozy') || n.includes('hoodie')) {
+    const lines = [90,100,110,120,130,140,150].map(y =>
+      `<line x1="40" y1="${y}" x2="110" y2="${y}" stroke="${c2}" stroke-width="1.5" opacity="0.25"/>`
+    ).join('');
     return `<rect x="38" y="84" width="74" height="74" rx="12" fill="${color}"/>` +
            `<rect x="15" y="84" width="25" height="57" rx="10" fill="${color}"/>` +
            `<rect x="110" y="84" width="25" height="57" rx="10" fill="${color}"/>` +
-           `<rect x="38" y="150" width="74" height="8" rx="4" fill="${c2}" opacity="0.5"/>`;
+           lines +
+           `<rect x="38" y="82" width="74" height="12" rx="8" fill="${c2}" opacity="0.35"/>`;
   }
-  if (n.includes('gown') || n.includes('dress')) {
-    return `<rect x="36" y="84" width="78" height="150" rx="8" fill="${color}"/>` +
+  if (n.includes('gown') || (n.includes('dress') && !n.includes('crop'))) {
+    return `<rect x="36" y="84" width="78" height="155" rx="8" fill="${color}"/>` +
            `<rect x="14" y="86" width="24" height="44" rx="9" fill="${color}"/>` +
-           `<rect x="112" y="86" width="24" height="44" rx="9" fill="${color}"/>`;
-  }
-  if (n.includes('hoodie')) {
-    return `<rect x="38" y="84" width="74" height="74" rx="10" fill="${color}"/>` +
-           `<rect x="15" y="84" width="25" height="57" rx="10" fill="${color}"/>` +
-           `<rect x="110" y="84" width="25" height="57" rx="10" fill="${color}"/>` +
-           `<ellipse cx="75" cy="84" rx="20" ry="10" fill="${adjustColor(color,-10)}"/>`;
+           `<rect x="112" y="86" width="24" height="44" rx="9" fill="${color}"/>` +
+           `<rect x="36" y="84" width="78" height="10" rx="5" fill="${c2}" opacity="0.35"/>` +
+           `<line x1="75" y1="96" x2="75" y2="239" stroke="${c2}" stroke-width="1.5" opacity="0.2"/>`;
   }
   // default shirt / blouse / tee
-  return `<rect x="40" y="84" width="70" height="72" rx="6" fill="${color}"/>` +
-         `<rect x="18" y="86" width="22" height="46" rx="8" fill="${color}"/>` +
-         `<rect x="110" y="86" width="22" height="46" rx="8" fill="${color}"/>`;
+  const stripes = n.includes('stripe') || n.includes('rugby') ?
+    `<rect x="40" y="100" width="70" height="10" fill="${c2}" opacity="0.4"/>` +
+    `<rect x="40" y="126" width="70" height="10" fill="${c2}" opacity="0.4"/>` : '';
+  const collar = `<path d="M 62,86 Q 75,98 88,86" fill="${c2}" opacity="0.5"/>`;
+  const buttons = `<circle cx="75" cy="108" r="2" fill="${c2}" opacity="0.5"/>` +
+                  `<circle cx="75" cy="122" r="2" fill="${c2}" opacity="0.5"/>`;
+  return `<rect x="40" y="84" width="70" height="74" rx="6" fill="${color}"/>` +
+         `<rect x="18" y="86" width="22" height="48" rx="8" fill="${color}"/>` +
+         `<rect x="110" y="86" width="22" height="48" rx="8" fill="${color}"/>` +
+         stripes + collar + buttons;
 }
 
 // ── Bottoms SVG ──
@@ -2060,7 +2125,7 @@ function updateStationCounts() { updateZoneDisplays(); }
 // ── Save / Load (localStorage) ──
 function saveToStorage() {
   try {
-    localStorage.setItem('cdu_player', JSON.stringify({playerName, playerEmoji, gender, vipUnlocked, currentTheme}));
+    localStorage.setItem('cdu_player', JSON.stringify({playerName, playerEmoji, gender, vipUnlocked, currentTheme, skinColor, skinDarkColor}));
     localStorage.setItem('cdu_outfit', JSON.stringify(outfit));
     localStorage.setItem('cdu_favorites', JSON.stringify(favorites));
     localStorage.setItem('cdu_leaderboard', JSON.stringify(leaderboard));
@@ -2075,6 +2140,7 @@ function loadSavedGame() {
       playerName = p.playerName; playerEmoji = p.playerEmoji || '✨';
       gender = p.gender || 'girl'; vipUnlocked = !!p.vipUnlocked;
       currentTheme = p.currentTheme || 'all';
+      if (p.skinColor) { skinColor = p.skinColor; skinDarkColor = p.skinDarkColor || '#999999'; }
     }
     const savedOutfit = JSON.parse(localStorage.getItem('cdu_outfit')||'null');
     if (savedOutfit) outfit = savedOutfit;
@@ -2084,8 +2150,34 @@ function loadSavedGame() {
     if (savedLB) leaderboard = savedLB;
     const savedBag = JSON.parse(localStorage.getItem('cdu_bag')||'null');
     if (savedBag) shoppingBag = savedBag;
+    // Apply skin tone after DOM loads
+    setTimeout(() => {
+      if (skinColor !== '#b0b0b0') {
+        document.querySelectorAll('.skin-part').forEach(el => el.setAttribute('fill', skinColor));
+        document.querySelectorAll('.skin-dark').forEach(el => el.setAttribute('fill', skinDarkColor));
+      }
+    }, 100);
     return !!(p && p.playerName);
   } catch(e) { return false; }
+}
+
+// ── Skin Tone ──
+function setSkinTone(color, darkColor, btn) {
+  skinColor = color;
+  skinDarkColor = darkColor;
+  document.querySelectorAll('.skin-part').forEach(el => {
+    el.setAttribute('fill', color);
+    if (el.tagName === 'ellipse' && el.getAttribute('cx') === '75') {
+      // head has stroke too
+      el.setAttribute('stroke', adjustColor(color, -20) || '#888888');
+    }
+  });
+  document.querySelectorAll('.skin-dark').forEach(el => el.setAttribute('fill', darkColor));
+  document.querySelectorAll('.skin-swatch').forEach(s => s.classList.remove('active-skin'));
+  if (btn) btn.classList.add('active-skin');
+  // Re-render clothing/hair on top of new skin
+  updateCharacterLayers();
+  saveToStorage();
 }
 
 // ── Init ──
