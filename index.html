@@ -1,0 +1,1663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Come Dress Up!</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;
+      background: linear-gradient(135deg, #ffb3d9 0%, #c9b3ff 50%, #b3d9ff 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .sparkle {
+      position: fixed; pointer-events: none; font-size: 20px;
+      animation: floatUp 3s ease-in forwards; z-index: 9999;
+    }
+    @keyframes floatUp {
+      0% { opacity:1; transform:translateY(0) rotate(0deg); }
+      100% { opacity:0; transform:translateY(-200px) rotate(360deg); }
+    }
+
+    /* Profile setup screen */
+    .profile-screen {
+      position: fixed; inset: 0; background: linear-gradient(135deg,#ffb3d9,#c9b3ff,#b3d9ff);
+      z-index: 2000; display: flex; align-items: center; justify-content: center;
+    }
+    .profile-screen.hidden { display: none; }
+    .profile-box {
+      background: white; border-radius: 28px; padding: 36px;
+      text-align: center; max-width: 400px; width: 90%;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+    }
+    .profile-box h1 { font-size: 36px; color: #c084fc; margin-bottom: 6px;
+      text-shadow: 2px 2px 0 #f9a8d4; }
+    .profile-box p { color: #888; font-size: 14px; margin-bottom: 20px; }
+    .profile-box input {
+      width: 100%; padding: 12px; border-radius: 14px;
+      border: 2px solid #c084fc; font-family: inherit; font-size: 18px;
+      text-align: center; margin-bottom: 16px;
+    }
+    .emoji-picker-grid {
+      display: grid; grid-template-columns: repeat(6,1fr); gap: 8px; margin-bottom: 20px;
+    }
+    .emoji-opt {
+      font-size: 26px; padding: 6px; border-radius: 12px; cursor: pointer;
+      border: 3px solid transparent; transition: all 0.15s;
+    }
+    .emoji-opt:hover { background: #f3e8ff; }
+    .emoji-opt.selected { border-color: #c084fc; background: #f3e8ff; }
+    .start-btn {
+      width: 100%; padding: 14px; border-radius: 20px; border: none;
+      background: linear-gradient(135deg,#f472b6,#c084fc); color: white;
+      font-family: inherit; font-size: 18px; font-weight: bold; cursor: pointer;
+    }
+
+    /* Header */
+    header { text-align: center; padding: 12px 12px 6px; }
+    .header-top { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 4px; }
+    header h1 {
+      font-size: 42px; color: #fff;
+      text-shadow: 3px 3px 0 #ff69b4, 5px 5px 0 #c084fc;
+      animation: bounce 2s infinite;
+    }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+    .player-badge {
+      background: rgba(255,255,255,0.3); border-radius: 20px;
+      padding: 6px 14px; color: white; font-size: 14px; font-weight: bold;
+      cursor: pointer; border: 2px solid rgba(255,255,255,0.5);
+    }
+    .mode-bar {
+      display: flex; justify-content: center; gap: 8px; margin: 6px 0; flex-wrap: wrap;
+    }
+    .mode-btn {
+      padding: 6px 16px; border-radius: 24px; border: 2px solid #fff;
+      font-family: inherit; font-size: 13px; font-weight: bold; cursor: pointer;
+      background: rgba(255,255,255,0.25); color: #fff; transition: all 0.2s;
+    }
+    .mode-btn.active { background: #fff; color: #c084fc; }
+    .gender-toggle { display: flex; justify-content: center; gap: 8px; margin-bottom: 6px; }
+    .gender-btn {
+      padding: 5px 16px; border-radius: 16px; border: 2px solid #fff;
+      font-family: inherit; font-size: 13px; cursor: pointer;
+      background: rgba(255,255,255,0.25); color: #fff; transition: all 0.2s;
+    }
+    .gender-btn.active { background: #fff; color: #c084fc; }
+
+    /* Layout */
+    .game-area {
+      display: flex; gap: 10px; padding: 0 10px 16px;
+      max-width: 1120px; margin: 0 auto; align-items: flex-start;
+    }
+
+    /* Left panel - Dressing Room */
+    .clothes-panel {
+      width: 220px; flex-shrink: 0;
+    }
+    /* Hidden category tabs still needed for JS */
+    .category-tabs { display: none; }
+    .items-grid {
+      display: flex; flex-direction: column; gap: 5px;
+      max-height: 400px; overflow-y: auto;
+    }
+    .clothing-item {
+      background: #f9f0ff; border: 2px solid #e9d5ff; border-radius: 10px;
+      padding: 7px 9px; cursor: pointer; display: flex; align-items: center;
+      gap: 8px; transition: all 0.15s;
+    }
+    .clothing-item:hover { border-color: #c084fc; background: #ede9fe; transform: translateX(2px); }
+    .clothing-item.selected { border-color: #ff69b4; background: #ffe4f0; }
+    .clothing-item.in-bag { border-color: #86efac; background: #f0fdf4; }
+    .item-emoji { font-size: 20px; flex-shrink: 0; }
+    .item-name { font-size: 11px; font-weight: bold; color: #555; }
+    .item-detail { font-size: 9px; color: #aaa; }
+    .item-actions { display: flex; gap: 3px; margin-left: auto; }
+    .item-act-btn {
+      font-size: 12px; cursor: pointer; opacity: 0.5; transition: opacity 0.15s;
+      background: none; border: none; padding: 0;
+    }
+    .item-act-btn:hover { opacity: 1; }
+
+    /* Dressing Room */
+    .dressing-room {
+      width: 220px; border-radius: 20px; overflow: hidden;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.18); flex-shrink: 0;
+      background: #fce4ec;
+      border: 3px solid #f48fb1;
+      display: flex; flex-direction: column;
+    }
+    .room-header {
+      background: linear-gradient(135deg, #f06292, #ba68c8);
+      color: white; text-align: center; padding: 10px 8px 8px;
+      font-size: 15px; font-weight: bold;
+      text-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+      letter-spacing: 0.5px;
+    }
+    .room-walls {
+      background: linear-gradient(180deg, #f8bbd0 0%, #fce4ec 60%, #ffe0b2 100%);
+      padding: 10px 10px 0; flex: 1;
+      position: relative;
+    }
+    .room-floor {
+      background: repeating-linear-gradient(
+        90deg,
+        #d7a97a 0px, #d7a97a 28px,
+        #c9915e 28px, #c9915e 30px
+      );
+      height: 22px; margin: 0 -10px;
+      border-top: 3px solid #b8764a;
+    }
+    .stations-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+      padding-bottom: 10px;
+    }
+    .station {
+      background: rgba(255,255,255,0.75); border-radius: 14px;
+      padding: 10px 6px 8px; cursor: pointer; text-align: center;
+      border: 2px solid rgba(255,255,255,0.9);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+      transition: all 0.18s; position: relative;
+      backdrop-filter: blur(2px);
+    }
+    .station:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 6px 18px rgba(0,0,0,0.18); border-color: #f06292; }
+    .station.active-station { border-color: #ff69b4; background: rgba(255,105,180,0.15); }
+    .station-icon { font-size: 26px; display: block; margin-bottom: 4px; }
+    .station-label {
+      font-size: 10px; font-weight: bold; color: #7b3f6e;
+      line-height: 1.2;
+    }
+    .station-count {
+      position: absolute; top: 4px; right: 6px;
+      font-size: 9px; color: #c084fc; font-weight: bold;
+    }
+
+    /* Popup drawer */
+    .room-popup-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(80,0,60,0.45); z-index: 800;
+      align-items: center; justify-content: center;
+    }
+    .room-popup-overlay.show { display: flex; }
+    .room-popup {
+      background: white; border-radius: 22px; padding: 0;
+      width: 320px; max-width: 95vw; max-height: 80vh;
+      display: flex; flex-direction: column;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+      overflow: hidden;
+    }
+    .popup-header {
+      background: linear-gradient(135deg, #f06292, #ba68c8);
+      color: white; padding: 14px 18px 12px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .popup-title { font-size: 17px; font-weight: bold; }
+    .popup-close {
+      font-size: 20px; cursor: pointer; background: rgba(255,255,255,0.25);
+      border: none; color: white; border-radius: 50%; width: 30px; height: 30px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: inherit; font-weight: bold; transition: background 0.15s;
+    }
+    .popup-close:hover { background: rgba(255,255,255,0.45); }
+    .popup-items-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+      padding: 14px; overflow-y: auto; flex: 1;
+    }
+    .popup-item-card {
+      background: #f9f0ff; border: 2px solid #e9d5ff; border-radius: 12px;
+      padding: 10px 8px; cursor: pointer; text-align: center;
+      transition: all 0.15s;
+    }
+    .popup-item-card:hover { border-color: #c084fc; background: #ede9fe; transform: scale(1.04); }
+    .popup-item-card.selected { border-color: #ff69b4; background: #ffe4f0; }
+    .popup-item-card.in-bag { border-color: #86efac; background: #f0fdf4; }
+    .popup-item-emoji { font-size: 28px; margin-bottom: 4px; }
+    .popup-item-name { font-size: 10px; font-weight: bold; color: #555; line-height: 1.3; }
+    .popup-item-detail { font-size: 9px; color: #aaa; margin-top: 2px; }
+    .popup-item-bag {
+      font-size: 11px; margin-top: 5px; cursor: pointer;
+      background: none; border: none; opacity: 0.5; transition: opacity 0.15s;
+    }
+    .popup-item-bag:hover { opacity: 1; }
+    .popup-empty { text-align: center; color: #ccc; font-size: 13px; padding: 24px; grid-column: span 2; }
+
+    /* Center */
+    .character-area {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+    .character-display {
+      background: rgba(255,255,255,0.9); border-radius: 22px; padding: 14px;
+      width: 100%; max-width: 290px; min-height: 390px;
+      display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    .char-wrap { position: relative; width: 150px; height: 285px; }
+    .char-wrap svg { width: 150px; height: 285px; }
+    .worn-items {
+      width: 100%; display: flex; flex-wrap: wrap; gap: 5px;
+      justify-content: center; min-height: 32px;
+    }
+    .worn-tag {
+      background: #f3e8ff; border: 1px solid #c084fc; border-radius: 16px;
+      padding: 2px 8px; font-size: 10px; color: #7c3aed;
+      display: flex; align-items: center; gap: 3px;
+    }
+    .remove-tag { cursor: pointer; color: #f87171; font-weight: bold; }
+    .action-buttons { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+    .action-btn {
+      padding: 8px 13px; border-radius: 20px; border: none;
+      font-family: inherit; font-size: 12px; font-weight: bold; cursor: pointer;
+      transition: all 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    }
+    .action-btn:hover { transform: translateY(-2px); }
+    .btn-reset   { background: #fda4af; color: #fff; }
+    .btn-save    { background: #86efac; color: #fff; }
+    .btn-fav     { background: #fcd34d; color: #fff; }
+    .btn-code    { background: #c084fc; color: #fff; }
+    .btn-vip     { background: linear-gradient(135deg,#ffd700,#ffaa00); color: #fff; }
+    .btn-runway  { background: linear-gradient(135deg,#f472b6,#a855f7); color: #fff; }
+    .btn-bag     { background: #67e8f9; color: #0e7490; }
+
+    /* Right panel */
+    .right-panel { width: 185px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; }
+    .panel-box {
+      background: rgba(255,255,255,0.9); border-radius: 16px; padding: 11px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    .panel-box h3 { color: #ff69b4; font-size: 13px; margin-bottom: 7px; text-align: center; }
+    .theme-btn {
+      display: block; width: 100%; margin-bottom: 4px; padding: 5px 7px;
+      border-radius: 9px; border: 2px solid #fda4af; background: white; color: #555;
+      font-family: inherit; font-size: 11px; cursor: pointer; text-align: left;
+    }
+    .theme-btn:hover, .theme-btn.active { background: #fda4af; color: white; }
+    .code-input-area input {
+      width: 100%; padding: 6px 8px; border-radius: 9px; border: 2px solid #c084fc;
+      font-family: inherit; font-size: 12px; margin-bottom: 5px;
+      text-align: center; letter-spacing: 2px; text-transform: uppercase;
+    }
+    .code-input-area button {
+      width: 100%; padding: 6px; border-radius: 9px; border: none;
+      background: #c084fc; color: white; font-family: inherit; font-size: 12px; font-weight: bold; cursor: pointer;
+    }
+    .code-msg { font-size: 10px; text-align: center; margin-top: 4px; min-height: 14px; color: #888; }
+    .secret-spot {
+      cursor: pointer; opacity: 0.12; transition: opacity 0.3s; display: inline-block;
+    }
+    .secret-spot:hover { opacity: 1; }
+
+    /* Shopping bag panel */
+    .bag-item {
+      display: flex; align-items: center; gap: 6px; padding: 5px;
+      border-bottom: 1px solid #f3e8ff; font-size: 11px; color: #555;
+    }
+    .bag-item:last-child { border-bottom: none; }
+    .bag-wear-btn {
+      margin-left: auto; font-size: 10px; padding: 2px 6px;
+      border-radius: 8px; border: none; background: #c084fc; color: white;
+      cursor: pointer; font-family: inherit;
+    }
+    .bag-remove-btn {
+      font-size: 11px; color: #f87171; cursor: pointer; background: none; border: none;
+    }
+    .bag-empty { font-size: 11px; color: #ccc; text-align: center; padding: 8px; }
+
+    /* ── Modals ── */
+    .overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.65); z-index: 1000;
+      align-items: center; justify-content: center;
+    }
+    .overlay.show { display: flex; }
+
+    /* Save modal */
+    .save-box {
+      background: white; border-radius: 22px; padding: 26px;
+      text-align: center; max-width: 340px; width: 90%;
+    }
+    .save-box h2 { color: #c084fc; font-size: 22px; margin-bottom: 6px; }
+    .save-box p { color: #888; font-size: 13px; margin-bottom: 12px; }
+    .code-display {
+      background: #f3e8ff; border: 3px dashed #c084fc; border-radius: 14px;
+      padding: 14px; font-size: 26px; font-weight: bold; letter-spacing: 4px;
+      color: #7c3aed; margin-bottom: 12px;
+    }
+    .outfit-preview { font-size: 28px; letter-spacing: 5px; margin-bottom: 10px; }
+
+    /* Outfit card */
+    .outfit-card-box {
+      background: white; border-radius: 22px; padding: 24px;
+      text-align: center; max-width: 380px; width: 90%;
+    }
+    .outfit-card {
+      background: linear-gradient(135deg,#fce7f3,#ede9fe,#dbeafe);
+      border-radius: 18px; padding: 20px; margin: 12px 0;
+      border: 3px solid #c084fc;
+    }
+    .outfit-card .card-name { font-size: 20px; font-weight: bold; color: #7c3aed; margin-bottom: 4px; }
+    .outfit-card .card-emoji { font-size: 14px; margin-bottom: 10px; }
+    .outfit-card .card-items { font-size: 34px; letter-spacing: 6px; margin-bottom: 10px; }
+    .outfit-card .card-score { font-size: 14px; color: #f472b6; font-weight: bold; }
+    .outfit-card .card-tag { font-size: 11px; color: #aaa; margin-top: 6px; }
+
+    /* Favorites */
+    .favorites-box {
+      background: white; border-radius: 22px; padding: 24px;
+      max-width: 420px; width: 90%; max-height: 80vh; overflow-y: auto;
+    }
+    .favorites-box h2 { color: #fcd34d; font-size: 22px; margin-bottom: 14px; text-align: center; }
+    .fav-item {
+      background: #fffde7; border: 2px solid #fcd34d; border-radius: 12px;
+      padding: 10px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;
+    }
+    .fav-item .fav-emojis { font-size: 22px; letter-spacing: 3px; }
+    .fav-item .fav-name { font-size: 13px; color: #555; flex: 1; }
+    .fav-wear { padding: 5px 10px; border-radius: 10px; border: none; background: #c084fc; color: white; font-family: inherit; font-size: 11px; cursor: pointer; }
+    .fav-del { padding: 5px 8px; border-radius: 10px; border: none; background: #fda4af; color: white; font-family: inherit; font-size: 11px; cursor: pointer; margin-left: 4px; }
+    .fav-empty { text-align: center; color: #ccc; font-size: 13px; padding: 20px; }
+
+    /* Leaderboard */
+    .leaderboard-box {
+      background: linear-gradient(135deg,#1a1a2e,#16213e);
+      border-radius: 22px; padding: 24px;
+      max-width: 400px; width: 90%; max-height: 80vh; overflow-y: auto;
+      color: white; text-align: center;
+    }
+    .leaderboard-box h2 { font-size: 24px; color: gold; margin-bottom: 14px; text-shadow: 0 0 16px gold; }
+    .lb-row {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.07); border-radius: 12px;
+      padding: 10px 14px; margin-bottom: 8px;
+    }
+    .lb-rank { font-size: 20px; width: 32px; text-align: center; }
+    .lb-player { flex: 1; text-align: left; }
+    .lb-player-name { font-size: 14px; font-weight: bold; color: white; }
+    .lb-player-sub { font-size: 11px; color: #aaa; }
+    .lb-score { font-size: 18px; font-weight: bold; color: gold; }
+    .lb-empty { color: #666; font-size: 13px; padding: 20px; }
+
+    /* BFF Mode */
+    .bff-box {
+      background: white; border-radius: 22px; padding: 20px;
+      max-width: 700px; width: 95%; max-height: 85vh; overflow-y: auto;
+    }
+    .bff-box h2 { color: #f472b6; font-size: 22px; margin-bottom: 14px; text-align: center; }
+    .bff-area { display: flex; gap: 16px; }
+    .bff-player { flex: 1; text-align: center; }
+    .bff-player h3 { font-size: 16px; color: #c084fc; margin-bottom: 8px; }
+    .bff-outfit-display {
+      background: #f9f0ff; border-radius: 14px; padding: 14px;
+      min-height: 80px; font-size: 28px; letter-spacing: 4px; margin-bottom: 8px;
+    }
+    .bff-name { font-size: 14px; color: #888; margin-bottom: 8px; }
+
+    /* Costume contest */
+    .costume-box {
+      background: linear-gradient(135deg,#1a0a2e,#2d1b4e);
+      border-radius: 22px; padding: 26px;
+      max-width: 420px; width: 90%; text-align: center; color: white;
+    }
+    .costume-box h2 { font-size: 24px; color: #f472b6; margin-bottom: 6px; text-shadow: 0 0 16px #f472b6; }
+    .costume-outfit { font-size: 44px; letter-spacing: 8px; margin: 16px 0; }
+    .costume-score-big { font-size: 48px; font-weight: bold; color: gold; margin: 10px 0; }
+    .costume-comment { font-size: 16px; color: #f3e8ff; font-style: italic; margin-bottom: 16px; }
+
+    /* World themes */
+    .world-btn {
+      display: block; width: 100%; margin-bottom: 4px; padding: 5px 7px;
+      border-radius: 9px; border: 2px solid #93c5fd; background: white; color: #555;
+      font-family: inherit; font-size: 11px; cursor: pointer; text-align: left;
+    }
+    .world-btn:hover, .world-btn.active { background: #93c5fd; color: white; }
+
+    /* VIP Room */
+    .vip-room {
+      background: linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);
+      border: 3px solid gold; border-radius: 22px; padding: 22px;
+      width: 90%; max-width: 560px; max-height: 85vh; overflow-y: auto;
+      color: white; text-align: center;
+    }
+    .vip-room h2 { font-size: 26px; color: gold; margin-bottom: 6px; text-shadow: 0 0 20px gold; }
+    .vip-grid { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; max-height: 280px; overflow-y: auto; }
+    .vip-item-row {
+      background: rgba(255,215,0,0.1); border: 2px solid rgba(255,215,0,0.3);
+      border-radius: 10px; padding: 7px 10px; cursor: pointer;
+      display: flex; align-items: center; gap: 9px; transition: all 0.15s; text-align: left;
+    }
+    .vip-item-row:hover { background: rgba(255,215,0,0.2); transform: translateX(3px); }
+    .vip-item-row .item-name { font-size: 12px; color: #ffd700; }
+    .vip-item-row .item-detail { font-size: 10px; color: #aaa; }
+    .vip-close {
+      padding: 8px 22px; border-radius: 14px; border: 2px solid gold;
+      background: transparent; color: gold; font-family: inherit; font-size: 13px; cursor: pointer;
+    }
+
+    /* Runway */
+    .runway-box {
+      background: white; border-radius: 22px; padding: 24px;
+      text-align: center; max-width: 400px; width: 90%;
+    }
+    .runway-box h2 { color: #f472b6; font-size: 24px; margin-bottom: 4px; }
+    .runway-outfit { font-size: 38px; letter-spacing: 7px; margin: 12px 0; }
+    .score-row { margin-bottom: 9px; }
+    .score-label { font-size: 12px; color: #555; margin-bottom: 3px; display: flex; justify-content: space-between; }
+    .score-bar-bg { background: #f3e8ff; border-radius: 16px; height: 10px; overflow: hidden; }
+    .score-bar-fill { height: 100%; border-radius: 16px; background: linear-gradient(90deg,#f472b6,#c084fc); transition: width 1s ease; }
+    .total-score { font-size: 26px; color: #c084fc; font-weight: bold; margin: 8px 0; }
+    .runway-comment { font-size: 15px; color: #555; margin-bottom: 14px; font-style: italic; }
+
+    /* Round complete */
+    .round-box {
+      background: white; border-radius: 22px; padding: 26px;
+      text-align: center; max-width: 340px; width: 90%;
+    }
+    .round-box h2 { font-size: 24px; color: #c084fc; margin-bottom: 6px; }
+    .round-outfit { font-size: 30px; margin: 10px 0; letter-spacing: 5px; }
+
+    /* Riddle */
+    .riddle-box {
+      background: white; border-radius: 18px; padding: 22px;
+      max-width: 320px; width: 90%; text-align: center;
+    }
+    .riddle-box h3 { color: #c084fc; margin-bottom: 9px; font-size: 17px; }
+    .riddle-box p { color: #555; margin-bottom: 12px; line-height: 1.6; font-size: 13px; }
+    .riddle-box input {
+      width: 100%; padding: 8px; border-radius: 10px; border: 2px solid #c084fc;
+      font-family: inherit; font-size: 14px; text-align: center;
+      letter-spacing: 2px; text-transform: uppercase; margin-bottom: 9px;
+    }
+
+    /* Shared modal buttons */
+    .modal-btn {
+      padding: 9px 18px; border-radius: 16px; border: none;
+      font-family: inherit; font-size: 13px; font-weight: bold;
+      cursor: pointer; margin: 4px; transition: all 0.2s;
+    }
+    .modal-btn:hover { transform: translateY(-2px); }
+    .mbtn-purple { background: #c084fc; color: white; }
+    .mbtn-pink   { background: #f472b6; color: white; }
+    .mbtn-gold   { background: linear-gradient(135deg,#ffd700,#ffaa00); color: white; }
+    .mbtn-green  { background: #86efac; color: white; }
+    .mbtn-outline { background: white; color: #aaa; border: 2px solid #e5e5e5; }
+    .mbtn-copy   { background: #67e8f9; color: #0e7490; }
+    .mbtn-yellow { background: #fcd34d; color: white; }
+
+    @media (max-width: 700px) {
+      .game-area { flex-direction: column; align-items: center; }
+      .clothes-panel, .right-panel { width: 100%; max-width: 380px; }
+      .items-grid { max-height: 180px; }
+      .bff-area { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Profile Setup Screen -->
+<div class="profile-screen" id="profileScreen">
+  <div class="profile-box">
+    <h1>👗 Come Dress Up!</h1>
+    <p>Welcome! Let's set up your profile first ✨</p>
+    <input type="text" id="playerNameInput" placeholder="Enter your name..." maxlength="16"/>
+    <p style="font-size:13px;color:#c084fc;margin-bottom:10px;font-weight:bold;">Pick your emoji!</p>
+    <div class="emoji-picker-grid" id="emojiPickerGrid"></div>
+    <button class="start-btn" onclick="startGame()">✨ Let's Play! ✨</button>
+  </div>
+</div>
+
+<!-- Main Game -->
+<header>
+  <div class="header-top">
+    <h1>👗 Come Dress Up! 👗</h1>
+    <div class="player-badge" id="playerBadge" onclick="openOverlay('leaderboardOverlay')" title="View leaderboard">
+      🏆
+    </div>
+  </div>
+  <div class="mode-bar">
+    <button class="mode-btn active" onclick="setMode('normal',this)">🎮 Normal</button>
+    <button class="mode-btn" onclick="setMode('freeplay',this)">🆓 Free Play</button>
+    <button class="mode-btn" onclick="setMode('runway',this)">👠 Runway</button>
+    <button class="mode-btn" onclick="setMode('costume',this)">🎭 Costume</button>
+    <button class="mode-btn" onclick="openOverlay('bffOverlay')">👯 BFF Mode</button>
+  </div>
+  <div class="gender-toggle">
+    <button class="gender-btn active" onclick="setGender('girl',this)">👧 Girl</button>
+    <button class="gender-btn" onclick="setGender('boy',this)">👦 Boy</button>
+  </div>
+</header>
+
+<div class="game-area">
+  <!-- Left: Dressing Room -->
+  <div class="clothes-panel">
+    <!-- Hidden infra kept for JS compatibility -->
+    <div class="category-tabs" id="categoryTabs"></div>
+    <div class="items-grid" id="itemsGrid" style="display:none;"></div>
+
+    <div class="dressing-room">
+      <div class="room-header">✨ Dressing Room ✨</div>
+      <div class="room-walls">
+        <div class="stations-grid" id="stationsGrid">
+          <div class="station" id="station-tops" onclick="openStation('tops')">
+            <span class="station-icon">👚</span>
+            <div class="station-label">Tops Rack</div>
+            <span class="station-count" id="count-tops"></span>
+          </div>
+          <div class="station" id="station-bottoms" onclick="openStation('bottoms')">
+            <span class="station-icon">👖</span>
+            <div class="station-label">Bottoms Rack</div>
+            <span class="station-count" id="count-bottoms"></span>
+          </div>
+          <div class="station" id="station-shoes" onclick="openStation('shoes')">
+            <span class="station-icon">👟</span>
+            <div class="station-label">Shoe Wall</div>
+            <span class="station-count" id="count-shoes"></span>
+          </div>
+          <div class="station" id="station-bags" onclick="openStation('bags')">
+            <span class="station-icon">👜</span>
+            <div class="station-label">Bag Stand</div>
+            <span class="station-count" id="count-bags"></span>
+          </div>
+          <div class="station" id="station-hair" onclick="openStation('hair')">
+            <span class="station-icon">💇</span>
+            <div class="station-label">Hair Station</div>
+            <span class="station-count" id="count-hair"></span>
+          </div>
+          <div class="station" id="station-accessories" onclick="openStation('accessories')">
+            <span class="station-icon">💍</span>
+            <div class="station-label">Accessories</div>
+            <span class="station-count" id="count-accessories"></span>
+          </div>
+        </div>
+        <div class="room-floor"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dressing Room Popup -->
+  <div class="room-popup-overlay" id="roomPopupOverlay" onclick="closeRoomPopup(event)">
+    <div class="room-popup" id="roomPopup">
+      <div class="popup-header">
+        <span class="popup-title" id="popupTitle">Items</span>
+        <button class="popup-close" onclick="closeRoomPopupDirect()">✕</button>
+      </div>
+      <div class="popup-items-grid" id="popupItemsGrid"></div>
+    </div>
+  </div>
+
+  <!-- Center -->
+  <div class="character-area">
+    <div class="character-display">
+      <div class="char-wrap">
+        <svg viewBox="0 0 150 285" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="75" cy="44" rx="28" ry="32" fill="#b0b0b0" stroke="#888888" stroke-width="1.5"/>
+          <ellipse cx="65" cy="42" rx="3.5" ry="4.5" fill="#333"/>
+          <ellipse cx="85" cy="42" rx="3.5" ry="4.5" fill="#333"/>
+          <circle cx="66" cy="40.5" r="1.3" fill="white"/>
+          <circle cx="86" cy="40.5" r="1.3" fill="white"/>
+          <path d="M 67 53 Q 75 61 83 53" stroke="#888888" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <ellipse cx="75" cy="49" rx="2" ry="1.5" fill="#888888" opacity="0.4"/>
+          <rect x="65" y="73" width="20" height="13" fill="#b0b0b0"/>
+          <rect id="torso-base" x="40" y="84" width="70" height="76" rx="8" fill="#e9d5ff"/>
+          <rect x="18" y="86" width="22" height="58" rx="9" fill="#b0b0b0"/>
+          <rect x="110" y="86" width="22" height="58" rx="9" fill="#b0b0b0"/>
+          <rect x="44" y="158" width="26" height="72" rx="6" fill="#b0b0b0"/>
+          <rect x="80" y="158" width="26" height="72" rx="6" fill="#b0b0b0"/>
+          <ellipse cx="57" cy="233" rx="15" ry="6" fill="#999999"/>
+          <ellipse cx="93" cy="233" rx="15" ry="6" fill="#999999"/>
+          <g id="hair-layer"></g>
+          <g id="top-layer"></g>
+          <g id="bottom-layer"></g>
+          <g id="shoes-layer"></g>
+          <g id="accessory-layer"></g>
+        </svg>
+      </div>
+      <div class="worn-items" id="wornItems">
+        <span style="font-size:11px;color:#ccc;">Pick items! ✨</span>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button class="action-btn btn-reset"  onclick="resetOutfit()">🔄</button>
+      <button class="action-btn btn-bag"    onclick="openOverlay('bagOverlay')">🛍️ Bag</button>
+      <button class="action-btn btn-fav"    onclick="saveToFavorites()">⭐ Fave</button>
+      <button class="action-btn btn-save"   onclick="saveOutfit()">💾 Share</button>
+      <button class="action-btn btn-code"   onclick="openCodeModal()">🔐 Code</button>
+      <button class="action-btn btn-vip"    onclick="tryVIP()">👑 VIP</button>
+      <button class="action-btn btn-runway" onclick="doRunway()">👠 Go!</button>
+    </div>
+  </div>
+
+  <!-- Right -->
+  <div class="right-panel">
+    <div class="panel-box">
+      <h3>🌈 Style Themes</h3>
+      <button class="theme-btn active" onclick="setTheme('all',this)">✨ All</button>
+      <button class="theme-btn" onclick="setTheme('princess',this)">👸 Princess</button>
+      <button class="theme-btn" onclick="setTheme('beach',this)">🏖️ Beach</button>
+      <button class="theme-btn" onclick="setTheme('halloween',this)">🎃 Halloween</button>
+      <button class="theme-btn" onclick="setTheme('space',this)">🚀 Space</button>
+      <button class="theme-btn" onclick="setTheme('winter',this)">❄️ Winter</button>
+      <button class="theme-btn" onclick="setTheme('sport',this)">⚽ Sport</button>
+      <button class="theme-btn" onclick="setTheme('y2k',this)">💿 Y2K</button>
+      <button class="theme-btn" onclick="setTheme('cottagecore',this)">🌿 Cottage</button>
+    </div>
+
+    <div class="panel-box">
+      <h3>🌍 World Style</h3>
+      <button class="world-btn" onclick="setWorldTheme('tokyo',this)">🗼 Tokyo Street</button>
+      <button class="world-btn" onclick="setWorldTheme('paris',this)">🗼 Paris Chic</button>
+      <button class="world-btn" onclick="setWorldTheme('nyc',this)">🗽 NYC Edge</button>
+      <button class="world-btn" onclick="setWorldTheme('miami',this)">🌴 Miami Vibe</button>
+      <button class="world-btn" onclick="setWorldTheme('london',this)">🎡 London Cool</button>
+    </div>
+
+    <div class="panel-box">
+      <h3>🔍 Hidden Secrets</h3>
+      <p style="font-size:10px;color:#aaa;margin-bottom:6px;">Something is hiding... 👀</p>
+      <div style="line-height:2.8;font-size:11px;color:#ccc;">
+        Look <span class="secret-spot" onclick="foundSecret('SPARKLE')">carefully</span>
+        at <span class="secret-spot" onclick="foundSecret('RAINBOW')">every</span>
+        little <span class="secret-spot" onclick="showRiddle()">corner</span>...
+        even <span class="secret-spot" onclick="foundSecret('BOWBOW')">the</span>
+        <span class="secret-spot" onclick="foundSecret('MERMAID')">tiniest</span>
+        <span class="secret-spot" onclick="foundSecret('MOONLIGHT')">spots</span>! 🌟
+      </div>
+    </div>
+
+    <div class="panel-box code-input-area">
+      <h3>🔐 Enter Code</h3>
+      <input type="text" id="codeInput" placeholder="TYPE CODE" maxlength="14"/>
+      <button onclick="submitCode()">✨ Unlock!</button>
+      <div class="code-msg" id="codeMsg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Shopping Bag ── -->
+<div class="overlay" id="bagOverlay">
+  <div class="save-box">
+    <h2>🛍️ Shopping Bag</h2>
+    <p>Items you're thinking about!</p>
+    <div id="bagList"></div>
+    <br>
+    <button class="modal-btn mbtn-purple" onclick="wearAllFromBag()">👗 Wear All!</button>
+    <button class="modal-btn mbtn-outline" onclick="closeOverlay('bagOverlay')">Close</button>
+  </div>
+</div>
+
+<!-- ── Favorites ── -->
+<div class="overlay" id="favoritesOverlay">
+  <div class="favorites-box">
+    <h2>⭐ My Favorite Looks</h2>
+    <div id="favoritesList"></div>
+    <br>
+    <button class="modal-btn mbtn-outline" onclick="closeOverlay('favoritesOverlay')">Close</button>
+  </div>
+</div>
+
+<!-- ── Save/Share Modal ── -->
+<div class="overlay" id="saveOverlay">
+  <div class="save-box">
+    <h2>💾 Share Your Look!</h2>
+    <p>Give this code to friends so they can wear your exact outfit!</p>
+    <div class="outfit-preview" id="saveOutfitPreview"></div>
+    <div class="code-display" id="generatedCode"></div>
+    <button class="modal-btn mbtn-copy" onclick="copyCode()">📋 Copy Code!</button>
+    <button class="modal-btn mbtn-pink" onclick="makeOutfitCard()">💌 Make Outfit Card!</button>
+    <button class="modal-btn mbtn-outline" onclick="closeOverlay('saveOverlay')">Close</button>
+    <div class="code-msg" id="copyMsg"></div>
+  </div>
+</div>
+
+<!-- ── Outfit Card ── -->
+<div class="overlay" id="outfitCardOverlay">
+  <div class="outfit-card-box">
+    <h2 style="color:#c084fc;font-size:20px;margin-bottom:6px;">💌 Your Outfit Card!</h2>
+    <p style="font-size:12px;color:#888;margin-bottom:10px;">Share this with your friends!</p>
+    <div class="outfit-card" id="outfitCardDisplay"></div>
+    <button class="modal-btn mbtn-purple" onclick="closeOverlay('outfitCardOverlay')">✨ Done!</button>
+  </div>
+</div>
+
+<!-- ── Use Code Modal ── -->
+<div class="overlay" id="codeOverlay">
+  <div class="save-box">
+    <h2>🔐 Enter a Code</h2>
+    <p>Type a code from a friend or one you found!</p>
+    <input type="text" id="modalCodeInput" placeholder="TYPE CODE HERE" maxlength="20"
+      style="width:100%;padding:11px;border-radius:12px;border:2px solid #c084fc;font-family:inherit;font-size:17px;text-align:center;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;"/>
+    <button class="modal-btn mbtn-purple" style="width:100%" onclick="submitModalCode()">✨ Unlock!</button>
+    <div class="code-msg" id="modalCodeMsg" style="font-size:13px;margin-top:8px;"></div>
+    <br><button class="modal-btn mbtn-outline" onclick="closeOverlay('codeOverlay')">Cancel</button>
+  </div>
+</div>
+
+<!-- ── VIP Room ── -->
+<div class="overlay" id="vipOverlay">
+  <div class="vip-room">
+    <h2>👑 VIP ROOM 👑</h2>
+    <p style="color:#ccc;font-size:13px;margin-bottom:12px;">Exclusive items only for VIP members ✨</p>
+    <div class="vip-grid" id="vipGrid"></div>
+    <div style="margin:10px 0;padding-top:10px;border-top:1px solid rgba(255,215,0,0.3);">
+      <p style="font-size:11px;color:#888;">Find the <span class="secret-spot" style="color:#ffd700;opacity:0.15;" onclick="foundSecret('VIPSTAR')">golden star</span> in the darkness ⭐</p>
+    </div>
+    <button class="vip-close" onclick="closeOverlay('vipOverlay')">✨ Leave VIP Room</button>
+  </div>
+</div>
+
+<!-- ── Leaderboard ── -->
+<div class="overlay" id="leaderboardOverlay">
+  <div class="leaderboard-box">
+    <h2>🏆 Leaderboard</h2>
+    <div id="leaderboardList"></div>
+    <br><button class="modal-btn mbtn-outline" style="border-color:gold;color:gold;" onclick="closeOverlay('leaderboardOverlay')">Close</button>
+  </div>
+</div>
+
+<!-- ── BFF Mode ── -->
+<div class="overlay" id="bffOverlay">
+  <div class="bff-box">
+    <h2>👯 BFF Mode!</h2>
+    <p style="text-align:center;color:#888;font-size:13px;margin-bottom:14px;">Dress up side by side with your bestie!</p>
+    <div class="bff-area">
+      <div class="bff-player">
+        <h3 id="bffName1">Player 1</h3>
+        <div class="bff-outfit-display" id="bffOutfit1">Pick items in the main wardrobe then tap Save Here! ✨</div>
+        <button class="modal-btn mbtn-purple" onclick="saveBFFOutfit(1)">💾 Save Here!</button>
+      </div>
+      <div style="width:2px;background:#f3e8ff;border-radius:2px;"></div>
+      <div class="bff-player">
+        <h3 id="bffName2">Player 2</h3>
+        <div class="bff-outfit-display" id="bffOutfit2">Pick items in the main wardrobe then tap Save Here! ✨</div>
+        <button class="modal-btn mbtn-pink" onclick="saveBFFOutfit(2)">💾 Save Here!</button>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:14px;">
+      <button class="modal-btn mbtn-gold" onclick="judgeBFF()">⭐ Judge Our Looks!</button>
+      <button class="modal-btn mbtn-outline" onclick="closeOverlay('bffOverlay')">Close</button>
+    </div>
+    <div id="bffResult" style="text-align:center;margin-top:10px;font-size:14px;color:#c084fc;"></div>
+  </div>
+</div>
+
+<!-- ── Round Complete ── -->
+<div class="overlay" id="roundOverlay">
+  <div class="round-box">
+    <h2>🎉 Round Complete!</h2>
+    <div class="round-outfit" id="roundOutfitEmojis"></div>
+    <p style="color:#c084fc;font-weight:bold;font-size:16px;">🌟 VIP ROOM UNLOCKED! 🌟</p>
+    <p style="color:#888;font-size:13px;margin-bottom:14px;">You earned exclusive fashion items!</p>
+    <button class="modal-btn mbtn-gold" onclick="openVIPFromRound()">👑 Enter VIP Room!</button>
+    <button class="modal-btn mbtn-purple" onclick="closeOverlay('roundOverlay')">🔄 Keep Styling!</button>
+  </div>
+</div>
+
+<!-- ── Runway ── -->
+<div class="overlay" id="runwayOverlay">
+  <div class="runway-box">
+    <h2>👠 The Runway!</h2>
+    <p style="color:#888;font-size:12px;">The judges scored your look...</p>
+    <div class="runway-outfit" id="runwayOutfitEmojis"></div>
+    <div id="scoreBars"></div>
+    <div class="total-score" id="totalScore"></div>
+    <div class="runway-comment" id="runwayComment"></div>
+    <button class="modal-btn mbtn-yellow" onclick="makeOutfitCardFromRunway()">💌 Make Outfit Card!</button>
+    <button class="modal-btn mbtn-pink"   onclick="closeOverlay('runwayOverlay');resetOutfit()">🔄 Try Again!</button>
+    <button class="modal-btn mbtn-outline" onclick="closeOverlay('runwayOverlay')">Keep Look</button>
+  </div>
+</div>
+
+<!-- ── Costume Contest ── -->
+<div class="overlay" id="costumeOverlay">
+  <div class="costume-box">
+    <h2>🎭 Costume Contest!</h2>
+    <p style="color:#f3e8ff;font-size:13px;margin-bottom:4px;">The judges have decided...</p>
+    <div class="costume-outfit" id="costumeOutfitEmojis"></div>
+    <div class="costume-score-big" id="costumeScore"></div>
+    <div class="costume-comment" id="costumeComment"></div>
+    <button class="modal-btn mbtn-pink" onclick="closeOverlay('costumeOverlay');resetOutfit()">🔄 Try Again!</button>
+    <button class="modal-btn mbtn-outline" onclick="closeOverlay('costumeOverlay')">Keep Look</button>
+  </div>
+</div>
+
+<!-- ── Riddle ── -->
+<div class="overlay" id="riddleOverlay">
+  <div class="riddle-box">
+    <h3>🧩 Solve the Riddle!</h3>
+    <p id="riddleText"></p>
+    <input type="text" id="riddleInput" placeholder="Your answer..."/>
+    <button class="modal-btn mbtn-purple" onclick="checkRiddle()">✨ Submit!</button>
+    <button class="modal-btn mbtn-outline" onclick="closeOverlay('riddleOverlay')">Maybe later</button>
+    <div class="code-msg" id="riddleMsg" style="font-size:12px;margin-top:6px;"></div>
+  </div>
+</div>
+
+<script>
+// ── State ──
+let playerName = 'Player';
+let playerEmoji = '✨';
+let gender = 'girl';
+let currentTheme = 'all';
+let currentCategory = 'tops';
+let currentMode = 'normal';
+let vipUnlocked = false;
+let outfit = {};
+let shoppingBag = []; // [{cat, idx, item}]
+let favorites = [];   // [{name, emojis, outfit snapshot}]
+let leaderboard = []; // [{name, emoji, score, look}]
+let savedOutfits = {};
+let bffOutfits = { 1: null, 2: null };
+let lastRunwayScore = 0;
+let lastRunwayEmojis = '';
+
+const profileEmojis = ['🦋','🌸','⭐','💜','🎀','🌈','🦄','💫','🌺','🔥','🐝','🦊','💅','🌙','🍓','🎵','🕊️','💎','🌊','🌟'];
+
+// ── Wardrobe ──
+const wardrobe = {
+  girl: {
+    tops: [
+      {emoji:'🌸',name:'Floral Crop Top',detail:'Light pink, short',theme:'all'},
+      {emoji:'🤍',name:'White Tank Top',detail:'Simple & classic',theme:'all'},
+      {emoji:'🖤',name:'Black Crop Top',detail:'Sleek & stylish',theme:'all'},
+      {emoji:'🦋',name:'Butterfly Tee',detail:'Purple with print',theme:'all'},
+      {emoji:'💜',name:'Lavender Blouse',detail:'Flowy, cottagecore',theme:'cottagecore'},
+      {emoji:'💿',name:'Metallic Top',detail:'Silver, Y2K style',theme:'y2k'},
+      {emoji:'🌈',name:'Rainbow Stripe Top',detail:'Colorful & fun',theme:'all'},
+      {emoji:'🩱',name:'Bikini Top',detail:'Tie-dye',theme:'beach'},
+      {emoji:'🧥',name:'Puffer Jacket',detail:'Warm & cozy',theme:'winter'},
+      {emoji:'🧣',name:'Cozy Sweater',detail:'Knit, oversized',theme:'winter'},
+      {emoji:'👸',name:'Ballgown Bodice',detail:'Gold & sparkly',theme:'princess'},
+      {emoji:'🎃',name:'Spooky Crop Top',detail:'Black with cobweb',theme:'halloween'},
+      {emoji:'🚀',name:'Space Suit Top',detail:'Silver & futuristic',theme:'space'},
+      {emoji:'⚽',name:'Sports Jersey',detail:'Breathable mesh',theme:'sport'},
+      {emoji:'🌿',name:'Lace Corset',detail:'Cottagecore vibes',theme:'cottagecore'},
+      {emoji:'❤️',name:'Red Tube Top',detail:'Bold & bright',theme:'all'},
+      {emoji:'🐝',name:'Honey Bee Top',detail:'Yellow stripes',theme:'all'},
+      {emoji:'🦊',name:'Rust Crop Top',detail:'Warm orange tones',theme:'all'},
+      {emoji:'🎵',name:'Pop Star Jacket',detail:'Rhinestones & glam',theme:'all'},
+      {emoji:'🕊️',name:'White Ruffle Top',detail:'Soft & angelic',theme:'all'},
+      {emoji:'🗼',name:'French Striped Top',detail:'Paris chic',theme:'paris'},
+      {emoji:'🗽',name:'Graphic Oversized Tee',detail:'NYC street',theme:'nyc'},
+      {emoji:'🌴',name:'Neon Bikini Top',detail:'Miami vibes',theme:'miami'},
+      {emoji:'🎡',name:'Plaid Blazer',detail:'London cool',theme:'london'},
+      {emoji:'🏮',name:'Harajuku Top',detail:'Tokyo street',theme:'tokyo'},
+    ],
+    bottoms: [
+      {emoji:'💙',name:'Denim Mini Skirt',detail:'Classic blue',theme:'all'},
+      {emoji:'🩷',name:'Pink Pleated Skirt',detail:'Flirty & fun',theme:'all'},
+      {emoji:'🖤',name:'Black Leggings',detail:'High waist',theme:'all'},
+      {emoji:'💜',name:'Purple Wide Leg Pants',detail:'Trendy & comfy',theme:'all'},
+      {emoji:'🌸',name:'Floral Maxi Skirt',detail:'Flowy, cottagecore',theme:'cottagecore'},
+      {emoji:'💿',name:'Low Rise Cargo Pants',detail:'Y2K classic',theme:'y2k'},
+      {emoji:'🩳',name:'Board Shorts',detail:'Surf ready',theme:'beach'},
+      {emoji:'❄️',name:'Snow Pants',detail:'Insulated & warm',theme:'winter'},
+      {emoji:'👑',name:'Ball Gown Skirt',detail:'Huge & sparkly',theme:'princess'},
+      {emoji:'🕸️',name:'Ripped Black Jeans',detail:'Spooky season',theme:'halloween'},
+      {emoji:'🌙',name:'Galaxy Print Pants',detail:'Space vibes',theme:'space'},
+      {emoji:'⚽',name:'Athletic Shorts',detail:'Sporty & light',theme:'sport'},
+      {emoji:'🌿',name:'Cottagecore Midi Skirt',detail:'Earthy tones',theme:'cottagecore'},
+      {emoji:'🩴',name:'Denim Cut-offs',detail:'Summer ready',theme:'beach'},
+      {emoji:'🌊',name:'Mermaid Shimmer Skirt',detail:'Scales & shimmer',theme:'all'},
+      {emoji:'🗼',name:'Beret & Trousers',detail:'Very French',theme:'paris'},
+      {emoji:'🗽',name:'Baggy Cargo Pants',detail:'NYC streetwear',theme:'nyc'},
+      {emoji:'🌴',name:'Mini Skirt',detail:'Miami bright',theme:'miami'},
+      {emoji:'🎡',name:'Tartan Skirt',detail:'London prep',theme:'london'},
+      {emoji:'🏮',name:'Wide Harajuku Pants',detail:'Tokyo oversized',theme:'tokyo'},
+    ],
+    shoes: [
+      {emoji:'👠',name:'Strappy Heels',detail:'Black, classic',theme:'all'},
+      {emoji:'👟',name:'White Sneakers',detail:'Clean & fresh',theme:'all'},
+      {emoji:'🥿',name:'Ballet Flats',detail:'Soft pink',theme:'all'},
+      {emoji:'🩰',name:'Pointe Shoes',detail:'Dance ready',theme:'princess'},
+      {emoji:'👡',name:'Platform Sandals',detail:'Y2K chunky',theme:'y2k'},
+      {emoji:'🥾',name:'Ankle Boots',detail:'Brown leather',theme:'all'},
+      {emoji:'🌊',name:'Flip Flops',detail:'Beach essential',theme:'beach'},
+      {emoji:'❄️',name:'Ugg Boots',detail:'Cozy & warm',theme:'winter'},
+      {emoji:'💜',name:'Platform Boots',detail:'Purple, chunky',theme:'all'},
+      {emoji:'🌸',name:'Mary Janes',detail:'Cute & girly',theme:'all'},
+      {emoji:'🚀',name:'Space Boots',detail:'Metallic silver',theme:'space'},
+      {emoji:'🎃',name:'Platform Creepers',detail:'Spooky style',theme:'halloween'},
+      {emoji:'⚽',name:'Cleats',detail:'Ready to play',theme:'sport'},
+      {emoji:'🌿',name:'Strappy Sandals',detail:'Earthy leather',theme:'cottagecore'},
+      {emoji:'✨',name:'Glitter Heels',detail:'Sparkle everywhere',theme:'all'},
+      {emoji:'🗼',name:'Ballet Pumps',detail:'Paris essential',theme:'paris'},
+      {emoji:'🗽',name:'Chunky Sneakers',detail:'NYC street',theme:'nyc'},
+      {emoji:'🌴',name:'Strappy Wedges',detail:'Miami summer',theme:'miami'},
+      {emoji:'🎡',name:'Chelsea Boots',detail:'London cool',theme:'london'},
+      {emoji:'🏮',name:'Platform Loafers',detail:'Tokyo trendy',theme:'tokyo'},
+    ],
+    bags: [
+      {emoji:'👜',name:'Mini Shoulder Bag',detail:'Pink, trendy',theme:'all'},
+      {emoji:'🎒',name:'Mini Backpack',detail:'Y2K classic',theme:'y2k'},
+      {emoji:'💼',name:'Tote Bag',detail:'Canvas, casual',theme:'all'},
+      {emoji:'🧺',name:'Wicker Basket Bag',detail:'Cottagecore must',theme:'cottagecore'},
+      {emoji:'🌊',name:'Beach Bag',detail:'Straw & bright',theme:'beach'},
+      {emoji:'💜',name:'Velvet Clutch',detail:'Purple luxury',theme:'all'},
+      {emoji:'⭐',name:'Star Shaped Bag',detail:'Y2K fun',theme:'y2k'},
+      {emoji:'🕸️',name:'Spooky Bag',detail:'Black with web',theme:'halloween'},
+      {emoji:'👸',name:'Royal Handbag',detail:'Gold & gems',theme:'princess'},
+      {emoji:'🌸',name:'Floral Crossbody',detail:'Cottagecore',theme:'cottagecore'},
+      {emoji:'🗼',name:'French Baguette Bag',detail:'Très chic',theme:'paris'},
+      {emoji:'🗽',name:'Graffiti Tote',detail:'NYC art',theme:'nyc'},
+      {emoji:'🌴',name:'Neon Mini Bag',detail:'Miami bright',theme:'miami'},
+    ],
+    hair: [
+      {emoji:'💇',name:'Long Brown Waves',detail:'Natural & flowing',theme:'all'},
+      {emoji:'👱',name:'Blonde Straight',detail:'Sleek & long',theme:'all'},
+      {emoji:'🖤',name:'Black Bob',detail:'Sharp & chic',theme:'all'},
+      {emoji:'🔴',name:'Red Curls',detail:'Bouncy & bold',theme:'all'},
+      {emoji:'🩷',name:'Pink Wavy',detail:'Pastel & dreamy',theme:'all'},
+      {emoji:'🌈',name:'Rainbow Hair',detail:'Every color!',theme:'all'},
+      {emoji:'💿',name:'Space Buns',detail:'Y2K iconic',theme:'y2k'},
+      {emoji:'🌿',name:'Braided Crown',detail:'Flower braids',theme:'cottagecore'},
+      {emoji:'❄️',name:'Icy White',detail:'Frost princess',theme:'winter'},
+      {emoji:'🌙',name:'Galaxy Ombre',detail:'Purple to black',theme:'space'},
+      {emoji:'👸',name:'Royal Updo',detail:'Curls & diamonds',theme:'princess'},
+      {emoji:'🎃',name:'Wild Orange',detail:'Big & spooky',theme:'halloween'},
+      {emoji:'🐝',name:'High Ponytail',detail:'Sleek & sporty',theme:'sport'},
+      {emoji:'💫',name:'Silver Highlights',detail:'Shimmery & glam',theme:'all'},
+      {emoji:'🏮',name:'Hime Cut',detail:'Tokyo princess',theme:'tokyo'},
+    ],
+    accessories: [
+      {emoji:'🌸',name:'Flower Crown',detail:'Daisy chain',theme:'cottagecore'},
+      {emoji:'🕶️',name:'Y2K Tinted Glasses',detail:'Tiny & colorful',theme:'y2k'},
+      {emoji:'💍',name:'Gold Ring Set',detail:'Multiple rings',theme:'all'},
+      {emoji:'📿',name:'Pearl Necklace',detail:'Classic & chic',theme:'all'},
+      {emoji:'🎀',name:'Giant Hair Bow',detail:'Pink satin',theme:'all'},
+      {emoji:'🧤',name:'Fingerless Gloves',detail:'Y2K edgy',theme:'y2k'},
+      {emoji:'⭐',name:'Star Earrings',detail:'Gold & dangly',theme:'all'},
+      {emoji:'🦋',name:'Butterfly Clips',detail:'Scattered in hair',theme:'all'},
+      {emoji:'🌙',name:'Moon Pendant',detail:'Silver necklace',theme:'all'},
+      {emoji:'🔭',name:'Space Helmet',detail:'Clear visor',theme:'space'},
+      {emoji:'👑',name:'Tiara',detail:'Crystal & gold',theme:'princess'},
+      {emoji:'🕸️',name:'Cobweb Tights',detail:'Spooky accessory',theme:'halloween'},
+      {emoji:'❄️',name:'Knit Beanie',detail:'Warm & cute',theme:'winter'},
+      {emoji:'🌿',name:'Wildflower Bracelet',detail:'Dainty charm',theme:'cottagecore'},
+      {emoji:'🎵',name:'Rhinestone Choker',detail:'Pop star glam',theme:'all'},
+      {emoji:'🍓',name:'Cherry Earrings',detail:'Sweet & cute',theme:'all'},
+      {emoji:'🗼',name:'Silk Scarf',detail:'Paris accessory',theme:'paris'},
+      {emoji:'🗽',name:'Chain Belt',detail:'NYC edge',theme:'nyc'},
+      {emoji:'🌴',name:'Sunglasses',detail:'Miami must',theme:'miami'},
+      {emoji:'🎡',name:'Plaid Beret',detail:'London chic',theme:'london'},
+      {emoji:'🏮',name:'Kawaii Hair Pins',detail:'Tokyo cute',theme:'tokyo'},
+    ],
+  },
+  boy: {
+    tops:[
+      {emoji:'🤍',name:'White Tee',detail:'Basic & clean',theme:'all'},
+      {emoji:'🖤',name:'Black Hoodie',detail:'Oversized, comfy',theme:'all'},
+      {emoji:'💙',name:'Denim Jacket',detail:'Classic cool',theme:'all'},
+      {emoji:'💿',name:'Graphic Tee',detail:'Y2K band shirt',theme:'y2k'},
+      {emoji:'🧥',name:'Puffer Jacket',detail:'Bold color',theme:'winter'},
+      {emoji:'🩱',name:'Swim Shirt',detail:'UV protection',theme:'beach'},
+      {emoji:'🚀',name:'Space Suit',detail:'Futuristic silver',theme:'space'},
+      {emoji:'🤴',name:'Royal Tunic',detail:'Gold trim',theme:'princess'},
+      {emoji:'🎃',name:'Spooky Shirt',detail:'Ghost print',theme:'halloween'},
+      {emoji:'⚽',name:'Sports Jersey',detail:'Team colors',theme:'sport'},
+      {emoji:'🌿',name:'Linen Shirt',detail:'Relaxed fit',theme:'cottagecore'},
+      {emoji:'🦊',name:'Rust Flannel',detail:'Warm tones',theme:'all'},
+      {emoji:'🎵',name:'Band Tee',detail:'Vintage wash',theme:'all'},
+    ],
+    bottoms:[
+      {emoji:'💙',name:'Blue Jeans',detail:'Classic fit',theme:'all'},
+      {emoji:'🖤',name:'Black Skinny Jeans',detail:'Slim & sharp',theme:'all'},
+      {emoji:'💿',name:'Baggy Cargo Pants',detail:'Y2K style',theme:'y2k'},
+      {emoji:'🩳',name:'Board Shorts',detail:'Surf ready',theme:'beach'},
+      {emoji:'❄️',name:'Snow Pants',detail:'Ski ready',theme:'winter'},
+      {emoji:'🌙',name:'Galaxy Joggers',detail:'Space print',theme:'space'},
+      {emoji:'🤴',name:'Royal Trousers',detail:'Fitted, gold trim',theme:'princess'},
+      {emoji:'🕸️',name:'Ripped Jeans',detail:'Distressed look',theme:'halloween'},
+      {emoji:'⚽',name:'Athletic Shorts',detail:'Lightweight',theme:'sport'},
+      {emoji:'🌿',name:'Linen Trousers',detail:'Relaxed & airy',theme:'cottagecore'},
+    ],
+    shoes:[
+      {emoji:'👟',name:'White Sneakers',detail:'Classic kicks',theme:'all'},
+      {emoji:'🥾',name:'Work Boots',detail:'Brown leather',theme:'all'},
+      {emoji:'🌊',name:'Flip Flops',detail:'Beach casual',theme:'beach'},
+      {emoji:'❄️',name:'Snow Boots',detail:'Waterproof',theme:'winter'},
+      {emoji:'🚀',name:'Futuristic Sneakers',detail:'Space age',theme:'space'},
+      {emoji:'⚽',name:'Cleats',detail:'Game ready',theme:'sport'},
+      {emoji:'💿',name:'Platform Sneakers',detail:'Y2K chunky',theme:'y2k'},
+      {emoji:'🌿',name:'Canvas Shoes',detail:'Simple & earthy',theme:'cottagecore'},
+    ],
+    bags:[
+      {emoji:'🎒',name:'Backpack',detail:'Everyday carry',theme:'all'},
+      {emoji:'💼',name:'Tote Bag',detail:'Canvas',theme:'all'},
+      {emoji:'🌊',name:'Beach Bag',detail:'Straw style',theme:'beach'},
+      {emoji:'🖤',name:'Crossbody Bag',detail:'Minimal & sleek',theme:'all'},
+    ],
+    hair:[
+      {emoji:'💇',name:'Short Fade',detail:'Clean cut',theme:'all'},
+      {emoji:'👱',name:'Blonde Surfer',detail:'Messy & cool',theme:'beach'},
+      {emoji:'🖤',name:'Black Curls',detail:'Natural texture',theme:'all'},
+      {emoji:'🌈',name:'Dyed Tips',detail:'Colorful ends',theme:'all'},
+      {emoji:'🎃',name:'Wild Spikes',detail:'Crazy style',theme:'halloween'},
+      {emoji:'🌙',name:'Galaxy Undercut',detail:'Dark & edgy',theme:'space'},
+      {emoji:'🤴',name:'Royal Hair',detail:'Slicked back',theme:'princess'},
+    ],
+    accessories:[
+      {emoji:'🧢',name:'Baseball Cap',detail:'Backwards, casual',theme:'all'},
+      {emoji:'🕶️',name:'Sunglasses',detail:'Cool shades',theme:'beach'},
+      {emoji:'📿',name:'Chain Necklace',detail:'Silver link',theme:'all'},
+      {emoji:'🧤',name:'Fingerless Gloves',detail:'Edgy style',theme:'all'},
+      {emoji:'⭐',name:'Star Studs',detail:'Simple & cool',theme:'all'},
+      {emoji:'🔭',name:'Space Helmet',detail:'Full visor',theme:'space'},
+      {emoji:'❄️',name:'Beanie',detail:'Slouchy knit',theme:'winter'},
+      {emoji:'⚽',name:'Sweatband',detail:'Sports ready',theme:'sport'},
+    ],
+  }
+};
+
+const vipItems = [
+  {emoji:'💎',name:'Diamond Corset',detail:'Ultra rare',type:'tops'},
+  {emoji:'🌟',name:'Star Cape',detail:'Trails glitter',type:'tops'},
+  {emoji:'🦄',name:'Unicorn Dress',detail:'Magical iridescent',type:'bottoms'},
+  {emoji:'🌈',name:'Rainbow Tulle Skirt',detail:'Six layers of color',type:'bottoms'},
+  {emoji:'✨',name:'Crystal Heels',detail:'Like Cinderella\'s',type:'shoes'},
+  {emoji:'🌙',name:'Moon Boots',detail:'Glow in the dark',type:'shoes'},
+  {emoji:'👸',name:'Royal Tiara',detail:'Real (fake) diamonds',type:'accessories'},
+  {emoji:'🦋',name:'Fairy Wings',detail:'Iridescent & magical',type:'accessories'},
+  {emoji:'🌺',name:'Enchanted Flower Crown',detail:'Blooms never wilt',type:'accessories'},
+  {emoji:'💫',name:'Shimmer Hair Extensions',detail:'Holographic strands',type:'hair'},
+  {emoji:'🎀',name:'Oversized Bow Set',detail:'Bows on EVERYTHING',type:'accessories'},
+  {emoji:'💜',name:'Purple Velvet Gown',detail:'Floor length luxury',type:'tops'},
+  {emoji:'🐚',name:'Shell Mini Skirt',detail:'Mermaid core',type:'bottoms'},
+  {emoji:'🌙',name:'Crescent Earrings',detail:'Gold, celestial',type:'accessories'},
+  {emoji:'👠',name:'Holographic Platforms',detail:'Shifts colors as you walk',type:'shoes'},
+  {emoji:'🌸',name:'Cherry Blossom Kimono',detail:'VIP exclusive',type:'tops'},
+];
+
+const worldThemes = {
+  tokyo:  { label:'🏮 Tokyo Street', items:['🏮','🌸','💜','👟','🦋'] },
+  paris:  { label:'🗼 Paris Chic',   items:['🗼','👜','🥿','📿','💄'] },
+  nyc:    { label:'🗽 NYC Edge',     items:['🗽','🖤','👟','📿','🕶️'] },
+  miami:  { label:'🌴 Miami Vibe',   items:['🌴','🩱','👡','🌊','🕶️'] },
+  london: { label:'🎡 London Cool',  items:['🎡','💙','🥾','🎒','☂️'] },
+};
+
+const codes = {
+  'SPARKLE':   {emoji:'⭐',name:'Star Crop Top',type:'tops',msg:'⭐ SPARKLE found!'},
+  'RAINBOW':   {emoji:'🌈',name:'Rainbow Hair',type:'hair',msg:'🌈 Rainbow unlocked!'},
+  'VIPSTAR':   {emoji:'🌟',name:'VIP Star Cape',type:'tops',msg:'🌟 VIP secret!'},
+  'BOWBOW':    {emoji:'🎀',name:'Giant Bow Set',type:'accessories',msg:'🎀 Bows unlocked!'},
+  'MERMAID':   {emoji:'🌊',name:'Mermaid Skirt',type:'bottoms',msg:'🌊 Under the sea!'},
+  'MOONLIGHT': {emoji:'🌙',name:'Moonlight Dress',type:'tops',msg:'🌙 Moonlight magic!'},
+  'PENNYQUIZ': {emoji:'🧠',name:'Quiz Crown',type:'accessories',msg:'👑 Penny\'s Quiz code!'},
+  'SLAY':      {emoji:'💅',name:'Slay Top',type:'tops',msg:'💅 SLAY!! Unlocked!'},
+  'OUTHACK':   {emoji:'🪄',name:'Outfit Hack Jacket',type:'tops',msg:'🪄 Outfit hack!'},
+  'MAGIC':     {emoji:'🦄',name:'Unicorn Skirt',type:'bottoms',msg:'🦄 Magical!'},
+  'STEPS':     {emoji:'👟',name:'Adventure Boots',type:'shoes',msg:'👟 Riddle solved!'},
+  'BESTIE':    {emoji:'💞',name:'BFF Matching Top',type:'tops',msg:'💞 Share with BFF!'},
+  'GLITTER':   {emoji:'✨',name:'Glitter Set',type:'accessories',msg:'✨ Glitter!'},
+  'SHIMMER':   {emoji:'🌟',name:'Shimmer Accessories',type:'accessories',msg:'🌟 Shimmer!'},
+  'FLUTTER':   {emoji:'🦋',name:'Butterfly Wings',type:'accessories',msg:'🦋 Flutter!'},
+  'PENNY':     {emoji:'💜',name:'Penny\'s Special Dress',type:'tops',msg:'💜 Just for Penny!'},
+  'BLOSSOM':   {emoji:'🌸',name:'Cherry Blossom Top',type:'tops',msg:'🌸 Blooming!'},
+  'QUEEN':     {emoji:'👑',name:'Queen\'s Gown',type:'tops',msg:'👑 Long live the Queen!'},
+  'UNICORN':   {emoji:'🦄',name:'Unicorn Skirt',type:'bottoms',msg:'🦄 Unicorn magic!'},
+  'STARDUST':  {emoji:'💫',name:'Stardust Top',type:'tops',msg:'💫 Stardust!'},
+  'STRAWBERRY':{emoji:'🍓',name:'Strawberry Dress',type:'tops',msg:'🍓 Sweet!'},
+  'FIERCE':    {emoji:'🔥',name:'Fierce Jacket',type:'tops',msg:'🔥 Too fierce!!'},
+  'CANDY':     {emoji:'🍭',name:'Candy Pastel Top',type:'tops',msg:'🍭 Sweet as candy!'},
+  'FOXYGIRL':  {emoji:'🦊',name:'Rust Coord',type:'tops',msg:'🦊 Foxy!'},
+  'ALOHA':     {emoji:'🌺',name:'Tropical Set',type:'tops',msg:'🌺 Aloha!'},
+  'CRUSH':     {emoji:'💝',name:'Pink Heart Top',type:'tops',msg:'💝 Heart everything!'},
+  'POPSTAR':   {emoji:'🎵',name:'Pop Star Outfit',type:'tops',msg:'🎵 Pop star!'},
+  'ANGEL':     {emoji:'🕊️',name:'Angel White Set',type:'tops',msg:'🕊️ Angel vibes!'},
+  'HONEYBEE':  {emoji:'🐝',name:'Bee Stripe Coord',type:'tops',msg:'🐝 Buzz buzz!'},
+};
+
+const riddles = [
+  {q:'I have hands but can\'t clap, a face but can\'t smile. What am I?',a:'CLOCK'},
+  {q:'The more you take, the more you leave behind. What am I?',a:'STEPS'},
+  {q:'I\'m full of holes but still hold water. What am I?',a:'SPONGE'},
+  {q:'What has to be broken before you can use it?',a:'EGG'},
+];
+let currentRiddle = riddles[0];
+const categories = {tops:'👚',bottoms:'👖',shoes:'👟',bags:'👜',hair:'💇',accessories:'💍'};
+
+// ── Profile Setup ──
+function initProfileEmojis() {
+  document.getElementById('emojiPickerGrid').innerHTML = profileEmojis.map(e=>
+    `<div class="emoji-opt ${e===playerEmoji?'selected':''}" onclick="selectProfileEmoji('${e}')">${e}</div>`
+  ).join('');
+}
+
+function selectProfileEmoji(e) {
+  playerEmoji = e;
+  document.querySelectorAll('.emoji-opt').forEach(el=>el.classList.toggle('selected', el.textContent===e));
+}
+
+function startGame() {
+  const name = document.getElementById('playerNameInput').value.trim();
+  if (!name) { alert('Enter your name first! 😊'); return; }
+  playerName = name;
+  document.getElementById('playerBadge').textContent = `${playerEmoji} ${playerName}`;
+  document.getElementById('profileScreen').classList.add('hidden');
+  renderCategoryTabs();
+  renderItems();
+  renderWornItems();
+  updateStationCounts();
+  spawnSparkles(10);
+  // Set BFF player 1 name
+  document.getElementById('bffName1').textContent = `${playerEmoji} ${playerName}`;
+}
+
+// ── Rendering ──
+function renderCategoryTabs() {
+  document.getElementById('categoryTabs').innerHTML =
+    Object.entries(categories).map(([cat,icon])=>
+      `<button class="cat-btn ${cat===currentCategory?'active':''}" onclick="setCategory('${cat}')">${icon}</button>`
+    ).join('');
+}
+
+function renderItems() {
+  const items = wardrobe[gender][currentCategory]||[];
+  const filtered = currentTheme==='all' ? items : items.filter(i=>i.theme==='all'||i.theme===currentTheme);
+  const selectedIdx = outfit[currentCategory];
+  const bagKeys = shoppingBag.map(b=>`${b.cat}-${b.idx}`);
+  document.getElementById('itemsGrid').innerHTML = filtered.length
+    ? filtered.map(item=>{
+        const realIdx = items.indexOf(item);
+        const inBag = bagKeys.includes(`${currentCategory}-${realIdx}`);
+        return `<div class="clothing-item ${realIdx===selectedIdx?'selected':''} ${inBag?'in-bag':''}" onclick="selectItem(${realIdx})">
+          <div class="item-emoji">${item.emoji}</div>
+          <div class="item-info">
+            <div class="item-name">${item.name}</div>
+            <div class="item-detail">${item.detail}</div>
+          </div>
+          <div class="item-actions">
+            <button class="item-act-btn" onclick="event.stopPropagation();addToBag(${realIdx})" title="Add to bag">🛍️</button>
+          </div>
+        </div>`;
+      }).join('')
+    : '<p style="font-size:11px;color:#aaa;text-align:center;padding:10px;">No items for this theme</p>';
+  // update dressing room station badges
+  if (typeof updateStationCounts === 'function') updateStationCounts();
+  // refresh popup if open
+  const pop = document.getElementById('roomPopupOverlay');
+  if (pop && pop.classList.contains('show') && typeof renderPopupItems === 'function') renderPopupItems();
+}
+
+function renderWornItems() {
+  const el = document.getElementById('wornItems');
+  const entries = Object.entries(outfit).filter(([,v])=>v!==null&&v!==undefined);
+  if (!entries.length) { el.innerHTML='<span style="font-size:11px;color:#ccc;">Pick items! ✨</span>'; return; }
+  el.innerHTML = entries.map(([cat,idx])=>{
+    const item = wardrobe[gender][cat]?.[idx];
+    if (!item) return '';
+    return `<div class="worn-tag">${item.emoji} <span>${item.name}</span>
+      <span class="remove-tag" onclick="removeItem('${cat}')">×</span></div>`;
+  }).join('');
+}
+
+function renderVIPGrid() {
+  document.getElementById('vipGrid').innerHTML = vipItems.map((item,idx)=>
+    `<div class="vip-item-row" onclick="wearVIPItem(${idx})">
+      <div class="item-emoji">${item.emoji}</div>
+      <div class="item-info">
+        <div class="item-name">${item.name}</div>
+        <div class="item-detail">${item.detail}</div>
+      </div>
+    </div>`
+  ).join('');
+}
+
+function renderBag() {
+  const el = document.getElementById('bagList');
+  if (!shoppingBag.length) { el.innerHTML='<div class="bag-empty">Your bag is empty! 🛍️<br>Click 🛍️ on items to add them!</div>'; return; }
+  el.innerHTML = shoppingBag.map((b,i)=>
+    `<div class="bag-item">
+      <span>${b.item.emoji}</span>
+      <span>${b.item.name}</span>
+      <button class="bag-wear-btn" onclick="wearFromBag(${i})">Wear</button>
+      <button class="bag-remove-btn" onclick="removeFromBag(${i})">×</button>
+    </div>`
+  ).join('');
+}
+
+function renderFavorites() {
+  const el = document.getElementById('favoritesList');
+  if (!favorites.length) { el.innerHTML='<div class="fav-empty">No saved looks yet!<br>Style an outfit and tap ⭐ Fave! 🌟</div>'; return; }
+  el.innerHTML = favorites.map((fav,i)=>
+    `<div class="fav-item">
+      <div class="fav-emojis">${fav.emojis}</div>
+      <div class="fav-name">${fav.name}</div>
+      <button class="fav-wear" onclick="wearFavorite(${i})">Wear</button>
+      <button class="fav-del" onclick="deleteFavorite(${i})">×</button>
+    </div>`
+  ).join('');
+}
+
+function renderLeaderboard() {
+  const el = document.getElementById('leaderboardList');
+  if (!leaderboard.length) { el.innerHTML='<div class="lb-empty">No scores yet!<br>Complete a runway to get on the board! 👠</div>'; return; }
+  const sorted = [...leaderboard].sort((a,b)=>b.score-a.score).slice(0,10);
+  const medals = ['🥇','🥈','🥉'];
+  el.innerHTML = sorted.map((entry,i)=>
+    `<div class="lb-row">
+      <div class="lb-rank">${medals[i]||`#${i+1}`}</div>
+      <div class="lb-player">
+        <div class="lb-player-name">${entry.emoji} ${entry.name}</div>
+        <div class="lb-player-sub">${entry.look}</div>
+      </div>
+      <div class="lb-score">${entry.score}</div>
+    </div>`
+  ).join('');
+}
+
+// ── Actions ──
+function setMode(mode, btn) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if (mode==='freeplay') { vipUnlocked=true; setMsg('Free Play — no rules! Just have fun! 🎀','#c084fc'); }
+  if (mode==='runway')   setMsg('Style your look then hit 👠 Go!','#f472b6');
+  if (mode==='costume')  setMsg('Make a costume then hit 👠 Go! 🎭','#a855f7');
+}
+
+function setGender(g, btn) {
+  gender = g; outfit = {};
+  document.querySelectorAll('.gender-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderItems(); renderWornItems();
+}
+
+function setCategory(cat) {
+  currentCategory = cat; renderCategoryTabs(); renderItems();
+}
+
+function setTheme(theme, btn) {
+  currentTheme = theme;
+  document.querySelectorAll('.theme-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.world-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderItems();
+}
+
+function setWorldTheme(theme, btn) {
+  currentTheme = theme;
+  document.querySelectorAll('.theme-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.world-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderItems();
+  const wt = worldThemes[theme];
+  if (wt) setMsg(`${wt.label} style activated! ✨`, '#93c5fd');
+}
+
+function selectItem(idx) {
+  outfit[currentCategory] = outfit[currentCategory]===idx ? null : idx;
+  renderItems(); renderWornItems(); spawnSparkles(3);
+}
+
+function removeItem(cat) { outfit[cat]=null; renderItems(); renderWornItems(); }
+
+function addToBag(idx) {
+  const item = wardrobe[gender][currentCategory]?.[idx];
+  if (!item) return;
+  if (shoppingBag.some(b=>b.cat===currentCategory&&b.idx===idx)) {
+    setMsg('Already in your bag! 🛍️','#888'); return;
+  }
+  shoppingBag.push({cat:currentCategory, idx, item});
+  setMsg(`Added ${item.emoji} ${item.name} to bag!`,'#67e8f9');
+  renderItems();
+}
+
+function wearFromBag(i) {
+  const b = shoppingBag[i];
+  outfit[b.cat] = b.idx;
+  renderItems(); renderWornItems(); spawnSparkles(4);
+  closeOverlay('bagOverlay');
+}
+
+function wearAllFromBag() {
+  shoppingBag.forEach(b=>{ outfit[b.cat]=b.idx; });
+  renderItems(); renderWornItems(); spawnSparkles(8);
+  closeOverlay('bagOverlay');
+}
+
+function removeFromBag(i) { shoppingBag.splice(i,1); renderBag(); renderItems(); }
+
+function resetOutfit() { outfit={}; renderItems(); renderWornItems(); }
+
+function wearVIPItem(idx) { spawnSparkles(6); setMsg(`✨ ${vipItems[idx].name} — VIP exclusive! 👑`,'#ffd700'); }
+
+// ── Favorites ──
+function saveToFavorites() {
+  const items = Object.entries(outfit).filter(([,v])=>v!==null&&v!==undefined);
+  if (!items.length) { setMsg('Pick some items first! 👗','#f87171'); return; }
+  const emojis = items.map(([cat,idx])=>wardrobe[gender][cat]?.[idx]?.emoji||'').join(' ');
+  const name = `${playerEmoji} Look #${favorites.length+1}`;
+  favorites.push({name, emojis, snapshot:{...outfit}, g:gender});
+  spawnSparkles(6);
+  setMsg('⭐ Saved to favorites!','#fcd34d');
+}
+
+function wearFavorite(i) {
+  const fav = favorites[i];
+  gender = fav.g; outfit={...fav.snapshot};
+  renderItems(); renderWornItems(); spawnSparkles(6);
+  closeOverlay('favoritesOverlay');
+}
+
+function deleteFavorite(i) { favorites.splice(i,1); renderFavorites(); }
+
+// ── Save / Share ──
+function saveOutfit() {
+  const items = Object.entries(outfit).filter(([,v])=>v!==null&&v!==undefined);
+  if (!items.length) { setMsg('Pick some items first! 👗','#f87171'); return; }
+  const code = 'CDU'+Math.random().toString(36).slice(2,7).toUpperCase();
+  savedOutfits[code] = {gender, outfit:{...outfit}};
+  const emojis = items.map(([cat,idx])=>wardrobe[gender][cat]?.[idx]?.emoji||'').join(' ');
+  document.getElementById('saveOutfitPreview').textContent = emojis;
+  document.getElementById('generatedCode').textContent = code;
+  document.getElementById('copyMsg').textContent = '';
+  openOverlay('saveOverlay');
+}
+
+function copyCode() {
+  const code = document.getElementById('generatedCode').textContent;
+  navigator.clipboard.writeText(code).then(()=>{
+    document.getElementById('copyMsg').textContent='✅ Copied! Share it!';
+    document.getElementById('copyMsg').style.color='#86efac';
+  }).catch(()=>{
+    document.getElementById('copyMsg').textContent='Select the code and copy it! 💜';
+  });
+}
+
+function makeOutfitCard() {
+  closeOverlay('saveOverlay');
+  showOutfitCard(lastRunwayScore||0);
+}
+
+function makeOutfitCardFromRunway() {
+  closeOverlay('runwayOverlay');
+  showOutfitCard(lastRunwayScore);
+}
+
+function showOutfitCard(score) {
+  const items = Object.entries(outfit).filter(([,v])=>v!==null&&v!==undefined);
+  const emojis = items.map(([cat,idx])=>wardrobe[gender][cat]?.[idx]?.emoji||'').join(' ');
+  const code = document.getElementById('generatedCode')?.textContent || '';
+  document.getElementById('outfitCardDisplay').innerHTML =
+    `<div class="card-name">${playerEmoji} ${playerName}</div>
+     <div class="card-emoji">Come Dress Up! 👗</div>
+     <div class="card-items">${emojis||'✨'}</div>
+     ${score?`<div class="card-score">Runway Score: ${score}/100 ⭐</div>`:''}
+     ${code?`<div class="card-tag">Code: ${code}</div>`:''}`;
+  openOverlay('outfitCardOverlay');
+}
+
+// ── Code input ──
+function openCodeModal() {
+  document.getElementById('modalCodeInput').value='';
+  document.getElementById('modalCodeMsg').textContent='';
+  openOverlay('codeOverlay');
+  setTimeout(()=>document.getElementById('modalCodeInput').focus(),100);
+}
+
+function submitModalCode() {
+  const val = document.getElementById('modalCodeInput').value.trim().toUpperCase();
+  const msgEl = document.getElementById('modalCodeMsg');
+  if (handleCode(val,msgEl)) setTimeout(()=>closeOverlay('codeOverlay'),2000);
+}
+
+function submitCode() {
+  const val = document.getElementById('codeInput').value.trim().toUpperCase();
+  handleCode(val, document.getElementById('codeMsg'));
+  document.getElementById('codeInput').value='';
+}
+
+function handleCode(val, msgEl) {
+  if (savedOutfits[val]) {
+    const snap = savedOutfits[val];
+    gender=snap.gender; outfit={...snap.outfit};
+    renderItems(); renderWornItems(); spawnSparkles(10);
+    msgEl.style.color='#c084fc'; msgEl.textContent='💜 Friend\'s look loaded!';
+    return true;
+  }
+  if (codes[val]) {
+    msgEl.style.color='#c084fc'; msgEl.textContent=codes[val].msg+' ✨';
+    spawnSparkles(8); return true;
+  }
+  msgEl.style.color='#f87171'; msgEl.textContent='Hmm, try another code! 🔐';
+  return false;
+}
+
+// ── VIP ──
+function tryVIP() {
+  if (!vipUnlocked && currentMode==='normal') {
+    setMsg('Finish a round first to unlock VIP! 👗✨','#f87171'); return;
+  }
+  renderVIPGrid(); openOverlay('vipOverlay');
+}
+
+// ── Runway & Scoring ──
+function getOutfitEmojis() {
+  return Object.entries(outfit).filter(([,v])=>v!==null&&v!==undefined)
+    .map(([cat,idx])=>wardrobe[gender][cat]?.[idx]?.emoji||'').join(' ');
+}
+
+function calcScore() {
+  const items = Object.entries(outfit).filter(([,v])=>v!==null&&v!==undefined);
+  if (!items.length) return 0;
+  const style = Math.floor(Math.random()*30)+60;
+  const themeMatch = currentTheme!=='all' && items.some(([cat,idx])=>wardrobe[gender][cat]?.[idx]?.theme===currentTheme)
+    ? Math.floor(Math.random()*20)+75 : Math.floor(Math.random()*30)+50;
+  const creativity = Math.min(100, items.length*16+Math.floor(Math.random()*20));
+  return {style, themeMatch, creativity, total: Math.floor((style+themeMatch+creativity)/3)};
+}
+
+function doRunway() {
+  const items = Object.entries(outfit).filter(([,v])=>v!==null&&v!==undefined);
+  if (!items.length) { setMsg('Put on an outfit first! 👗','#f87171'); return; }
+  const emojis = getOutfitEmojis();
+  const sc = calcScore();
+  lastRunwayScore = sc.total; lastRunwayEmojis = emojis;
+
+  if (currentMode==='costume') {
+    document.getElementById('costumeOutfitEmojis').textContent = emojis;
+    document.getElementById('costumeScore').textContent = `${sc.total}/100`;
+    const comments = sc.total>=90
+      ? ['👑 BEST COSTUME EVER!! You win!!','🏆 The judges are OBSESSED!']
+      : sc.total>=75 ? ['🎭 Amazing costume! So creative!','✨ The crowd went wild!']
+      : sc.total>=60 ? ['🌟 Great costume! Keep going!','🎀 Really fun look!']
+      : ['🎃 Keep trying! You\'ve got this!','💜 Every costume queen started here!'];
+    document.getElementById('costumeComment').textContent = comments[Math.floor(Math.random()*comments.length)];
+    openOverlay('costumeOverlay');
+    spawnSparkles(12);
+    addToLeaderboard(sc.total, emojis);
+    return;
+  }
+
+  document.getElementById('runwayOutfitEmojis').textContent = emojis;
+  document.getElementById('scoreBars').innerHTML = [
+    ['Style',sc.style,'#f472b6'],
+    ['Theme Match',sc.themeMatch,'#a855f7'],
+    ['Creativity',sc.creativity,'#67e8f9'],
+  ].map(([label,score,color])=>
+    `<div class="score-row">
+      <div class="score-label"><span>${label}</span><span>${score}/100</span></div>
+      <div class="score-bar-bg"><div class="score-bar-fill" style="width:0%;background:${color}" data-width="${score}%"></div></div>
+    </div>`
+  ).join('');
+  document.getElementById('totalScore').textContent = `${sc.total}/100`;
+  const comments = sc.total>=90
+    ? ['🌟 STUNNING!! The judges are crying happy tears!','✨ A perfect look! You were BORN for this!','👑 10/10 — absolutely iconic!!']
+    : sc.total>=75 ? ['💜 Amazing! The crowd went wild!','🎀 So stylish!','✨ Fabulous!']
+    : sc.total>=60 ? ['🌸 Really cute! Keep experimenting!','💙 Nice look!','🌈 Fun style!']
+    : ['🎀 Good start!','💫 Keep going!','🌟 Every great stylist started here!'];
+  document.getElementById('runwayComment').textContent = comments[Math.floor(Math.random()*comments.length)];
+  openOverlay('runwayOverlay');
+  setTimeout(()=>{ document.querySelectorAll('.score-bar-fill').forEach(b=>b.style.width=b.dataset.width); },100);
+  addToLeaderboard(sc.total, emojis);
+  spawnSparkles(12);
+
+  if (!vipUnlocked) {
+    vipUnlocked = true;
+    setTimeout(()=>{
+      document.getElementById('roundOutfitEmojis').textContent = emojis;
+      closeOverlay('runwayOverlay'); openOverlay('roundOverlay');
+    }, 3500);
+  }
+}
+
+function addToLeaderboard(score, look) {
+  leaderboard.push({name:playerName, emoji:playerEmoji, score, look});
+}
+
+function openVIPFromRound() { closeOverlay('roundOverlay'); renderVIPGrid(); openOverlay('vipOverlay'); }
+
+// ── BFF Mode ──
+function saveBFFOutfit(player) {
+  const items = Object.entries(outfit).filter(([,v])=>v!==null&&v!==undefined);
+  if (!items.length) { alert('Pick some items first! 👗'); return; }
+  const emojis = getOutfitEmojis();
+  bffOutfits[player] = emojis;
+  document.getElementById(`bffOutfit${player}`).textContent = emojis||'No items yet!';
+  spawnSparkles(6);
+}
+
+function judgeBFF() {
+  const el = document.getElementById('bffResult');
+  if (!bffOutfits[1]&&!bffOutfits[2]) { el.textContent='Both players need to save a look first! 👗'; return; }
+  const winner = Math.random()>0.5 ? 1 : 2;
+  const name = winner===1 ? `${playerEmoji} ${playerName}` : 'Player 2';
+  const reactions = ['wins this round!! 🎉','has the best look! 👑','is the style queen! 👸','totally slayed! 💅'];
+  el.textContent = `${name} ${reactions[Math.floor(Math.random()*reactions.length)]}`;
+  spawnSparkles(12);
+}
+
+// ── Secrets & Riddles ──
+function foundSecret(code) {
+  if (codes[code]) { setMsg('🔍 Secret found! '+codes[code].msg,'#c084fc'); spawnSparkles(8); }
+}
+
+function showRiddle() {
+  currentRiddle = riddles[Math.floor(Math.random()*riddles.length)];
+  document.getElementById('riddleText').textContent = currentRiddle.q;
+  document.getElementById('riddleInput').value='';
+  document.getElementById('riddleMsg').textContent='';
+  openOverlay('riddleOverlay');
+}
+
+function checkRiddle() {
+  const ans = document.getElementById('riddleInput').value.trim().toUpperCase();
+  const msg = document.getElementById('riddleMsg');
+  if (ans===currentRiddle.a) {
+    msg.style.color='#c084fc'; msg.textContent='🎉 Correct! Code: MAGIC 🦄✨'; spawnSparkles(12);
+  } else { msg.style.color='#f87171'; msg.textContent='Not quite! Think harder 🧩'; }
+}
+
+// ── Utilities ──
+function openOverlay(id) {
+  if (id==='bagOverlay') renderBag();
+  if (id==='favoritesOverlay') renderFavorites();
+  if (id==='leaderboardOverlay') renderLeaderboard();
+  document.getElementById(id).classList.add('show');
+}
+function closeOverlay(id) { document.getElementById(id).classList.remove('show'); }
+function setMsg(msg,color) {
+  const el=document.getElementById('codeMsg');
+  el.style.color=color||'#888'; el.textContent=msg;
+}
+function spawnSparkles(count=6) {
+  const emojis=['✨','⭐','💫','🌟','🎀','💜','🦋','🌸','💅','🌈','🥯'];
+  for(let i=0;i<count;i++){
+    setTimeout(()=>{
+      const el=document.createElement('div'); el.className='sparkle';
+      el.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+      el.style.left=Math.random()*window.innerWidth+'px';
+      el.style.top=Math.random()*window.innerHeight+'px';
+      document.body.appendChild(el); setTimeout(()=>el.remove(),3000);
+    },i*120);
+  }
+}
+
+// ── Dressing Room ──
+const stationLabels = {
+  tops:'👚 Tops Rack', bottoms:'👖 Bottoms Rack', shoes:'👟 Shoe Wall',
+  bags:'👜 Bag Stand', hair:'💇 Hair Station', accessories:'💍 Accessories'
+};
+
+function openStation(cat) {
+  currentCategory = cat;
+  renderCategoryTabs(); // keep hidden tabs in sync
+  // highlight active station
+  document.querySelectorAll('.station').forEach(s=>s.classList.remove('active-station'));
+  const st = document.getElementById('station-'+cat);
+  if (st) st.classList.add('active-station');
+  // build popup
+  document.getElementById('popupTitle').textContent = stationLabels[cat]||cat;
+  renderPopupItems();
+  document.getElementById('roomPopupOverlay').classList.add('show');
+}
+
+function renderPopupItems() {
+  const cat = currentCategory;
+  const items = wardrobe[gender][cat]||[];
+  const filtered = currentTheme==='all' ? items : items.filter(i=>i.theme==='all'||i.theme===currentTheme);
+  const selectedIdx = outfit[cat];
+  const bagKeys = shoppingBag.map(b=>`${b.cat}-${b.idx}`);
+  const grid = document.getElementById('popupItemsGrid');
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="popup-empty">No items for this theme 🎨<br>Try switching the theme!</div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(item=>{
+    const realIdx = items.indexOf(item);
+    const inBag = bagKeys.includes(`${cat}-${realIdx}`);
+    const sel = realIdx===selectedIdx;
+    return `<div class="popup-item-card ${sel?'selected':''} ${inBag?'in-bag':''}" onclick="selectItemFromPopup(${realIdx})">
+      <div class="popup-item-emoji">${item.emoji}</div>
+      <div class="popup-item-name">${item.name}</div>
+      <div class="popup-item-detail">${item.detail}</div>
+      <button class="popup-item-bag" onclick="event.stopPropagation();addToBagFromPopup(${realIdx})" title="Add to bag">🛍️</button>
+    </div>`;
+  }).join('');
+}
+
+function selectItemFromPopup(idx) {
+  selectItem(idx);
+  renderPopupItems();
+  updateStationCounts();
+}
+
+function addToBagFromPopup(idx) {
+  addToBag(idx);
+  renderPopupItems();
+}
+
+function closeRoomPopup(e) {
+  if (e.target===document.getElementById('roomPopupOverlay')) closeRoomPopupDirect();
+}
+function closeRoomPopupDirect() {
+  document.getElementById('roomPopupOverlay').classList.remove('show');
+  document.querySelectorAll('.station').forEach(s=>s.classList.remove('active-station'));
+}
+
+function updateStationCounts() {
+  Object.keys(categories).forEach(cat=>{
+    const el = document.getElementById('count-'+cat);
+    if (!el) return;
+    const idx = outfit[cat];
+    if (idx!==null && idx!==undefined) {
+      const item = wardrobe[gender][cat]?.[idx];
+      el.textContent = item ? item.emoji : '';
+    } else {
+      el.textContent = '';
+    }
+  });
+}
+
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded',()=>{
+  initProfileEmojis();
+  document.getElementById('codeInput').addEventListener('keydown',e=>{if(e.key==='Enter')submitCode();});
+  document.getElementById('riddleInput').addEventListener('keydown',e=>{if(e.key==='Enter')checkRiddle();});
+  document.getElementById('modalCodeInput').addEventListener('keydown',e=>{if(e.key==='Enter')submitModalCode();});
+});
+</script>
+</body>
+</html>
