@@ -1204,6 +1204,7 @@ function startGame() {
   spawnSparkles(10);
   // Set BFF player 1 name
   document.getElementById('bffName1').textContent = `${playerEmoji} ${playerName}`;
+  saveToStorage();
 }
 
 // ── Rendering ──
@@ -1254,6 +1255,7 @@ function renderWornItems() {
   }).join('');
   updateCharacterLayers();
   updateZoneDisplays();
+  saveToStorage();
 }
 
 function updateCharacterLayers() {
@@ -1689,6 +1691,7 @@ function saveToFavorites() {
   favorites.push({name, emojis, snapshot:{...outfit}, g:gender});
   spawnSparkles(6);
   setMsg('⭐ Saved to favorites!','#fcd34d');
+  saveToStorage();
 }
 
 function wearFavorite(i) {
@@ -2054,12 +2057,54 @@ function updateZoneDisplays() {
 function updateStationCounts() { updateZoneDisplays(); }
 
 
+// ── Save / Load (localStorage) ──
+function saveToStorage() {
+  try {
+    localStorage.setItem('cdu_player', JSON.stringify({playerName, playerEmoji, gender, vipUnlocked, currentTheme}));
+    localStorage.setItem('cdu_outfit', JSON.stringify(outfit));
+    localStorage.setItem('cdu_favorites', JSON.stringify(favorites));
+    localStorage.setItem('cdu_leaderboard', JSON.stringify(leaderboard));
+    localStorage.setItem('cdu_bag', JSON.stringify(shoppingBag));
+  } catch(e) {}
+}
+
+function loadSavedGame() {
+  try {
+    const p = JSON.parse(localStorage.getItem('cdu_player')||'null');
+    if (p && p.playerName) {
+      playerName = p.playerName; playerEmoji = p.playerEmoji || '✨';
+      gender = p.gender || 'girl'; vipUnlocked = !!p.vipUnlocked;
+      currentTheme = p.currentTheme || 'all';
+    }
+    const savedOutfit = JSON.parse(localStorage.getItem('cdu_outfit')||'null');
+    if (savedOutfit) outfit = savedOutfit;
+    const savedFavs = JSON.parse(localStorage.getItem('cdu_favorites')||'null');
+    if (savedFavs) favorites = savedFavs;
+    const savedLB = JSON.parse(localStorage.getItem('cdu_leaderboard')||'null');
+    if (savedLB) leaderboard = savedLB;
+    const savedBag = JSON.parse(localStorage.getItem('cdu_bag')||'null');
+    if (savedBag) shoppingBag = savedBag;
+    return !!(p && p.playerName);
+  } catch(e) { return false; }
+}
+
 // ── Init ──
 document.addEventListener('DOMContentLoaded',()=>{
   initProfileEmojis();
   document.getElementById('codeInput').addEventListener('keydown',e=>{if(e.key==='Enter')submitCode();});
   document.getElementById('riddleInput').addEventListener('keydown',e=>{if(e.key==='Enter')checkRiddle();});
   document.getElementById('modalCodeInput').addEventListener('keydown',e=>{if(e.key==='Enter')submitModalCode();});
+
+  // Auto-resume saved game
+  if (loadSavedGame() && playerName) {
+    // Pre-fill profile screen
+    document.getElementById('playerNameInput').value = playerName;
+    selectProfileEmoji(playerEmoji);
+    // Restore gender button
+    document.querySelectorAll('.gender-btn').forEach(b=>{
+      b.classList.toggle('active', (gender==='girl' && b.textContent.includes('Girl')) || (gender==='boy' && b.textContent.includes('Boy')));
+    });
+  }
 });
 </script>
 </body>
