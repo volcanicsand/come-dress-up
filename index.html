@@ -1182,13 +1182,54 @@ function renderItems() {
 function renderWornItems() {
   const el = document.getElementById('wornItems');
   const entries = Object.entries(outfit).filter(([,v])=>v!==null&&v!==undefined);
-  if (!entries.length) { el.innerHTML='<span style="font-size:11px;color:#ccc;">Pick items! ✨</span>'; return; }
+  if (!entries.length) { el.innerHTML='<span style="font-size:11px;color:#ccc;">Pick items! ✨</span>'; updateCharacterLayers(); return; }
   el.innerHTML = entries.map(([cat,idx])=>{
     const item = wardrobe[gender][cat]?.[idx];
     if (!item) return '';
     return `<div class="worn-tag">${item.emoji} <span>${item.name}</span>
       <span class="remove-tag" onclick="removeItem('${cat}')">×</span></div>`;
   }).join('');
+  updateCharacterLayers();
+}
+
+function updateCharacterLayers() {
+  // Show emojis on the character SVG in the right body positions
+  const positions = {
+    tops:        {x:75, y:125, size:44},
+    bottoms:     {x:75, y:185, size:40},
+    shoes:       {x:75, y:238, size:32},
+    hair:        {x:75, y:38,  size:38},
+    accessories: {x:75, y:68,  size:28},
+    bags:        {x:130,y:155, size:28},
+  };
+  Object.entries(positions).forEach(([cat, pos])=>{
+    const layer = document.getElementById(cat === 'tops' ? 'top-layer' :
+      cat === 'bottoms' ? 'bottom-layer' :
+      cat === 'shoes' ? 'shoes-layer' :
+      cat === 'hair' ? 'hair-layer' :
+      'accessory-layer');
+    if (!layer) return;
+    const idx = outfit[cat];
+    if (idx === null || idx === undefined) { layer.innerHTML = ''; return; }
+    const item = wardrobe[gender][cat]?.[idx];
+    if (!item) { layer.innerHTML = ''; return; }
+    layer.innerHTML = `<text x="${pos.x}" y="${pos.y}" font-size="${pos.size}" text-anchor="middle" dominant-baseline="middle">${item.emoji}</text>`;
+  });
+  // bags special layer
+  const bagLayer = document.getElementById('accessory-layer');
+  // accessories + bags both use accessory-layer, combine them
+  const accIdx = outfit['accessories'];
+  const bagIdx = outfit['bags'];
+  let combined = '';
+  if (accIdx !== null && accIdx !== undefined) {
+    const item = wardrobe[gender]['accessories']?.[accIdx];
+    if (item) combined += `<text x="75" y="68" font-size="28" text-anchor="middle" dominant-baseline="middle">${item.emoji}</text>`;
+  }
+  if (bagIdx !== null && bagIdx !== undefined) {
+    const item = wardrobe[gender]['bags']?.[bagIdx];
+    if (item) combined += `<text x="130" y="160" font-size="28" text-anchor="middle" dominant-baseline="middle">${item.emoji}</text>`;
+  }
+  if (bagLayer) bagLayer.innerHTML = combined;
 }
 
 function renderVIPGrid() {
