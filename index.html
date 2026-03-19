@@ -1663,7 +1663,7 @@ function setMode(mode, btn) {
   document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   if (mode==='freeplay') { vipUnlocked=true; setMsg('Free Play — no rules! Just have fun! 🎀','#c084fc'); }
-  if (mode==='runway')   setMsg('Style your look then hit 👠 Go!','#f472b6');
+  if (mode==='runway')   { setMsg('Style your look then hit 👠 Go! button below! ✨','#f472b6'); spawnSparkles(4); }
   if (mode==='costume')  setMsg('Make a costume then hit 👠 Go! 🎭','#a855f7');
 }
 
@@ -1887,7 +1887,11 @@ function calcScore() {
 
 function doRunway() {
   const items = Object.entries(outfit).filter(([,v])=>v!==null&&v!==undefined);
-  if (!items.length) { setMsg('Put on an outfit first! 👗','#f87171'); return; }
+  if (!items.length) {
+    // Show a big obvious popup instead of tiny message
+    alert('👗 You need to wear something first!\n\nWalk to a station in the dressing room, pick an item, and then hit 👠 Go!');
+    return;
+  }
   const emojis = getOutfitEmojis();
   const sc = calcScore();
   lastRunwayScore = sc.total; lastRunwayEmojis = emojis;
