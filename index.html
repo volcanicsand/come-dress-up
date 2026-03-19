@@ -982,6 +982,7 @@ let shoppingBag = []; // [{cat, idx, item}]
 let favorites = [];   // [{name, emojis, outfit snapshot}]
 let leaderboard = []; // [{name, emoji, score, look}]
 let savedOutfits = {};
+let unlockedCodes = []; // codes that have been entered, persisted across sessions
 let bffOutfits = { 1: null, 2: null };
 let lastRunwayScore = 0;
 let lastRunwayEmojis = '';
@@ -1964,6 +1965,11 @@ function handleCode(val, msgEl) {
     }
     outfit[cat] = idx;
     currentCategory = cat;
+    // Remember this code permanently
+    if (!unlockedCodes.includes(val)) {
+      unlockedCodes.push(val);
+      try { localStorage.setItem('cdu_codes', JSON.stringify(unlockedCodes)); } catch(e) {}
+    }
     renderItems(); renderWornItems(); spawnSparkles(8);
     msgEl.style.color = '#c084fc'; msgEl.textContent = codeItem.msg + ' — now wearing it! ✨';
     return true;
@@ -2610,7 +2616,23 @@ function loadSavedGame() {
     const savedBag = JSON.parse(localStorage.getItem('cdu_bag')||'null');
     if (savedBag) shoppingBag = savedBag;
     const savedFace = JSON.parse(localStorage.getItem('cdu_face')||'null');
-    if (savedFace) face = savedFace;
+    if (savedFace) face = {...face, ...savedFace};
+    // Restore unlocked codes — re-add them to wardrobe for BOTH genders
+    const savedCodes = JSON.parse(localStorage.getItem('cdu_codes')||'[]');
+    if (Array.isArray(savedCodes)) {
+      unlockedCodes = savedCodes;
+      savedCodes.forEach(code => {
+        const codeItem = codes[code];
+        if (!codeItem) return;
+        const cat = codeItem.type;
+        ['girl','boy'].forEach(g => {
+          if (!wardrobe[g][cat]) wardrobe[g][cat] = [];
+          if (!wardrobe[g][cat].find(i => i.name === codeItem.name)) {
+            wardrobe[g][cat].push({ emoji: codeItem.emoji, name: codeItem.name, detail: '🔐 Code unlock!', theme: 'all' });
+          }
+        });
+      });
+    }
     // Apply skin tone after DOM loads
     setTimeout(() => {
       if (skinColor !== '#b0b0b0') {
