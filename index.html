@@ -2324,12 +2324,12 @@ function getBangsSVG(id) {
     return `<path d="M 47,12 Q 75,36 103,12 L 103,14 Q 75,36 47,14 Z" fill="${hc}"/>`;
   }
   if (id === 'side-left') {
-    // Swept to the right, covers left forehead
-    return `<path d="M 47,12 Q 70,38 100,26 L 100,14 Q 70,28 47,12 Z" fill="${hc}"/>`;
+    // Bangs swept to the LEFT — long on left, tapers off on right side
+    return `<path d="M 47,12 L 97,12 L 97,16 Q 78,22 65,30 Q 54,36 47,32 Z" fill="${hc}"/>`;
   }
   if (id === 'side-right') {
-    // Swept to the left, covers right forehead
-    return `<path d="M 103,12 Q 80,38 50,26 L 50,14 Q 80,28 103,12 Z" fill="${hc}"/>`;
+    // Bangs swept to the RIGHT — long on right, tapers off on left side
+    return `<path d="M 103,12 L 53,12 L 53,16 Q 72,22 85,30 Q 96,36 103,32 Z" fill="${hc}"/>`;
   }
   if (id === 'curtain') {
     // Parted in middle, falls to sides
