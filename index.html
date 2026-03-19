@@ -120,58 +120,91 @@
     }
     .item-act-btn:hover { opacity: 1; }
 
-    /* Dressing Room */
-    .dressing-room {
-      width: 220px; border-radius: 20px; overflow: hidden;
-      box-shadow: 0 6px 24px rgba(0,0,0,0.18); flex-shrink: 0;
-      background: #fce4ec;
-      border: 3px solid #f48fb1;
-      display: flex; flex-direction: column;
+    /* Walkable Dressing Room */
+    .wroom-wrapper {
+      width: 220px; flex-shrink: 0; border-radius: 20px; overflow: hidden;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.18); border: 3px solid #f48fb1;
+      display: flex; flex-direction: column; background: #fce4ec;
     }
-    .room-header {
+    .wroom-header {
       background: linear-gradient(135deg, #f06292, #ba68c8);
       color: white; text-align: center; padding: 10px 8px 8px;
       font-size: 15px; font-weight: bold;
       text-shadow: 1px 1px 0 rgba(0,0,0,0.2);
-      letter-spacing: 0.5px;
     }
-    .room-walls {
-      background: linear-gradient(180deg, #f8bbd0 0%, #fce4ec 60%, #ffe0b2 100%);
-      padding: 10px 10px 0; flex: 1;
-      position: relative;
+    .wroom-hint {
+      font-size: 9px; background: rgba(0,0,0,0.15); padding: 3px 8px;
+      text-align: center; color: rgba(255,255,255,0.9);
     }
-    .room-floor {
-      background: repeating-linear-gradient(
-        90deg,
-        #d7a97a 0px, #d7a97a 28px,
-        #c9915e 28px, #c9915e 30px
-      );
-      height: 22px; margin: 0 -10px;
+    .wroom-scroll {
+      overflow-x: auto; overflow-y: hidden;
+      scrollbar-width: thin; scrollbar-color: #f48fb1 #fce4ec;
+    }
+    .wroom-scroll::-webkit-scrollbar { height: 4px; }
+    .wroom-scroll::-webkit-scrollbar-thumb { background: #f48fb1; border-radius: 2px; }
+    .wroom-scene {
+      position: relative; width: 680px; height: 205px; flex-shrink: 0;
+      background: linear-gradient(180deg, #fff9e6 0%, #fff0f5 60%);
+    }
+    .wroom-wall-stripe {
+      position:absolute; top:0; left:0; right:0; height:8px;
+      background: linear-gradient(135deg, #ba68c8, #f06292);
+    }
+    .wroom-wallpaper {
+      position:absolute; top:8px; left:0; right:0; height:130px;
+      background: repeating-linear-gradient(90deg,
+        #fce4ec 0px, #fce4ec 54px, #f8bbd0 54px, #f8bbd0 56px);
+      opacity: 0.55;
+    }
+    .wroom-floor {
+      position:absolute; bottom:0; left:0; right:0; height:48px;
+      background: repeating-linear-gradient(90deg, #d7a97a 0px, #d7a97a 36px, #c9915e 36px, #c9915e 38px);
       border-top: 3px solid #b8764a;
     }
-    .stations-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-      padding-bottom: 10px;
+    .wroom-zones-row {
+      position:absolute; bottom:48px; left:8px; right:0;
+      display:flex; align-items:flex-end; gap:5px;
     }
-    .station {
-      background: rgba(255,255,255,0.75); border-radius: 14px;
-      padding: 10px 6px 8px; cursor: pointer; text-align: center;
-      border: 2px solid rgba(255,255,255,0.9);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-      transition: all 0.18s; position: relative;
-      backdrop-filter: blur(2px);
+    .wzone {
+      width:102px; flex-shrink:0; cursor:pointer; text-align:center;
+      transition: transform 0.18s; position:relative;
     }
-    .station:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 6px 18px rgba(0,0,0,0.18); border-color: #f06292; }
-    .station.active-station { border-color: #ff69b4; background: rgba(255,105,180,0.15); }
-    .station-icon { font-size: 26px; display: block; margin-bottom: 4px; }
-    .station-label {
-      font-size: 10px; font-weight: bold; color: #7b3f6e;
-      line-height: 1.2;
+    .wzone:hover { transform:translateY(-4px); }
+    .wzone.wzone-active .wzone-inner { border-color:#ff69b4; background:rgba(255,105,180,0.2); }
+    .wzone-inner {
+      background:rgba(255,255,255,0.85); border-radius:12px;
+      border:2px solid rgba(255,255,255,0.9); padding:7px 4px 5px;
+      box-shadow:0 2px 10px rgba(0,0,0,0.12); backdrop-filter:blur(2px);
+      margin-bottom:3px; position:relative;
     }
-    .station-count {
-      position: absolute; top: 4px; right: 6px;
-      font-size: 9px; color: #c084fc; font-weight: bold;
+    .wzone-icon { font-size:18px; display:block; margin-bottom:2px; }
+    .wzone-hangers { display:flex; justify-content:center; gap:1px; min-height:18px; flex-wrap:wrap; }
+    .wzone-hanger { font-size:12px; }
+    .wzone-worn {
+      position:absolute; top:-5px; right:-5px; width:10px; height:10px;
+      background:#ff69b4; border-radius:50%; border:2px solid white; display:none;
     }
+    .wzone-worn.show { display:block; }
+    .wzone-label { font-size:8.5px; font-weight:bold; color:#7b3f6e; line-height:1.2; }
+    /* Walking character */
+    .wroom-char {
+      position:absolute; bottom:48px; font-size:28px; line-height:1;
+      transition: left 0.55s cubic-bezier(0.34,1.56,0.64,1);
+      pointer-events:none; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+    }
+    .wroom-char-wrap { position:relative; display:inline-block; }
+    .wroom-bubble {
+      position:absolute; bottom:110%; left:50%; transform:translateX(-50%);
+      background:white; border-radius:8px; padding:3px 7px; font-size:9px;
+      color:#555; white-space:nowrap; opacity:0; transition:opacity 0.25s;
+      box-shadow:0 1px 6px rgba(0,0,0,0.15); pointer-events:none;
+      border:1px solid #f0d0e0;
+    }
+    .wroom-bubble::after {
+      content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%);
+      border:5px solid transparent; border-top-color:white;
+    }
+    .wroom-bubble.show { opacity:1; }
 
     /* Popup drawer */
     .room-popup-overlay {
@@ -533,42 +566,71 @@
     <div class="category-tabs" id="categoryTabs"></div>
     <div class="items-grid" id="itemsGrid" style="display:none;"></div>
 
-    <div class="dressing-room">
-      <div class="room-header">✨ Dressing Room ✨</div>
-      <div class="room-walls">
-        <div class="stations-grid" id="stationsGrid">
-          <div class="station" id="station-tops" onclick="openStation('tops')">
-            <span class="station-icon">👚</span>
-            <div class="station-label">Tops Rack</div>
-            <span class="station-count" id="count-tops"></span>
+    <div class="wroom-wrapper">
+      <div class="wroom-header">✨ Dressing Room ✨</div>
+      <div class="wroom-hint">👆 Walk to a station!</div>
+      <div class="wroom-scroll" id="wroomScroll">
+        <div class="wroom-scene" id="wroomScene">
+          <div class="wroom-wall-stripe"></div>
+          <div class="wroom-wallpaper"></div>
+          <div class="wroom-zones-row" id="wroomZonesRow">
+            <div class="wzone" id="wzone-hair" onclick="walkToZone('hair')">
+              <div class="wzone-inner">
+                <span class="wzone-icon">💇</span>
+                <div class="wzone-hangers" id="whangers-hair"></div>
+                <div class="wzone-worn" id="wworn-hair"></div>
+              </div>
+              <div class="wzone-label">Hair Station</div>
+            </div>
+            <div class="wzone" id="wzone-accessories" onclick="walkToZone('accessories')">
+              <div class="wzone-inner">
+                <span class="wzone-icon">💍</span>
+                <div class="wzone-hangers" id="whangers-accessories"></div>
+                <div class="wzone-worn" id="wworn-accessories"></div>
+              </div>
+              <div class="wzone-label">Accessories</div>
+            </div>
+            <div class="wzone" id="wzone-tops" onclick="walkToZone('tops')">
+              <div class="wzone-inner">
+                <span class="wzone-icon">👚</span>
+                <div class="wzone-hangers" id="whangers-tops"></div>
+                <div class="wzone-worn" id="wworn-tops"></div>
+              </div>
+              <div class="wzone-label">Tops Rack</div>
+            </div>
+            <div class="wzone" id="wzone-bottoms" onclick="walkToZone('bottoms')">
+              <div class="wzone-inner">
+                <span class="wzone-icon">👖</span>
+                <div class="wzone-hangers" id="whangers-bottoms"></div>
+                <div class="wzone-worn" id="wworn-bottoms"></div>
+              </div>
+              <div class="wzone-label">Bottoms Rack</div>
+            </div>
+            <div class="wzone" id="wzone-shoes" onclick="walkToZone('shoes')">
+              <div class="wzone-inner">
+                <span class="wzone-icon">👟</span>
+                <div class="wzone-hangers" id="whangers-shoes"></div>
+                <div class="wzone-worn" id="wworn-shoes"></div>
+              </div>
+              <div class="wzone-label">Shoe Wall</div>
+            </div>
+            <div class="wzone" id="wzone-bags" onclick="walkToZone('bags')">
+              <div class="wzone-inner">
+                <span class="wzone-icon">👜</span>
+                <div class="wzone-hangers" id="whangers-bags"></div>
+                <div class="wzone-worn" id="wworn-bags"></div>
+              </div>
+              <div class="wzone-label">Bag Stand</div>
+            </div>
           </div>
-          <div class="station" id="station-bottoms" onclick="openStation('bottoms')">
-            <span class="station-icon">👖</span>
-            <div class="station-label">Bottoms Rack</div>
-            <span class="station-count" id="count-bottoms"></span>
+          <div class="wroom-char" id="wroomChar" style="left:10px">
+            <div class="wroom-char-wrap">
+              <span id="wroomCharEmoji">👧</span>
+              <div class="wroom-bubble" id="wroomBubble"></div>
+            </div>
           </div>
-          <div class="station" id="station-shoes" onclick="openStation('shoes')">
-            <span class="station-icon">👟</span>
-            <div class="station-label">Shoe Wall</div>
-            <span class="station-count" id="count-shoes"></span>
-          </div>
-          <div class="station" id="station-bags" onclick="openStation('bags')">
-            <span class="station-icon">👜</span>
-            <div class="station-label">Bag Stand</div>
-            <span class="station-count" id="count-bags"></span>
-          </div>
-          <div class="station" id="station-hair" onclick="openStation('hair')">
-            <span class="station-icon">💇</span>
-            <div class="station-label">Hair Station</div>
-            <span class="station-count" id="count-hair"></span>
-          </div>
-          <div class="station" id="station-accessories" onclick="openStation('accessories')">
-            <span class="station-icon">💍</span>
-            <div class="station-label">Accessories</div>
-            <span class="station-count" id="count-accessories"></span>
-          </div>
+          <div class="wroom-floor"></div>
         </div>
-        <div class="room-floor"></div>
       </div>
     </div>
   </div>
@@ -597,7 +659,7 @@
           <path d="M 67 53 Q 75 61 83 53" stroke="#888888" stroke-width="1.5" fill="none" stroke-linecap="round"/>
           <ellipse cx="75" cy="49" rx="2" ry="1.5" fill="#888888" opacity="0.4"/>
           <rect x="65" y="73" width="20" height="13" fill="#b0b0b0"/>
-          <rect id="torso-base" x="40" y="84" width="70" height="76" rx="8" fill="#e9d5ff"/>
+          <rect id="torso-base" x="40" y="84" width="70" height="76" rx="8" fill="#b8b8b8"/>
           <rect x="18" y="86" width="22" height="58" rx="9" fill="#b0b0b0"/>
           <rect x="110" y="86" width="22" height="58" rx="9" fill="#b0b0b0"/>
           <rect x="44" y="158" width="26" height="72" rx="6" fill="#b0b0b0"/>
@@ -1138,6 +1200,7 @@ function startGame() {
   renderItems();
   renderWornItems();
   updateStationCounts();
+  updateZoneDisplays();
   spawnSparkles(10);
   // Set BFF player 1 name
   document.getElementById('bffName1').textContent = `${playerEmoji} ${playerName}`;
@@ -1172,8 +1235,8 @@ function renderItems() {
         </div>`;
       }).join('')
     : '<p style="font-size:11px;color:#aaa;text-align:center;padding:10px;">No items for this theme</p>';
-  // update dressing room station badges
-  if (typeof updateStationCounts === 'function') updateStationCounts();
+  // update dressing room zone displays
+  updateZoneDisplays();
   // refresh popup if open
   const pop = document.getElementById('roomPopupOverlay');
   if (pop && pop.classList.contains('show') && typeof renderPopupItems === 'function') renderPopupItems();
@@ -1182,7 +1245,7 @@ function renderItems() {
 function renderWornItems() {
   const el = document.getElementById('wornItems');
   const entries = Object.entries(outfit).filter(([,v])=>v!==null&&v!==undefined);
-  if (!entries.length) { el.innerHTML='<span style="font-size:11px;color:#ccc;">Pick items! ✨</span>'; updateCharacterLayers(); return; }
+  if (!entries.length) { el.innerHTML='<span style="font-size:11px;color:#ccc;">Pick items! ✨</span>'; updateCharacterLayers(); updateZoneDisplays(); return; }
   el.innerHTML = entries.map(([cat,idx])=>{
     const item = wardrobe[gender][cat]?.[idx];
     if (!item) return '';
@@ -1190,46 +1253,286 @@ function renderWornItems() {
       <span class="remove-tag" onclick="removeItem('${cat}')">×</span></div>`;
   }).join('');
   updateCharacterLayers();
+  updateZoneDisplays();
 }
 
 function updateCharacterLayers() {
-  // Show emojis on the character SVG in the right body positions
-  const positions = {
-    tops:        {x:75, y:125, size:44},
-    bottoms:     {x:75, y:185, size:40},
-    shoes:       {x:75, y:238, size:32},
-    hair:        {x:75, y:38,  size:38},
-    accessories: {x:75, y:68,  size:28},
-    bags:        {x:130,y:155, size:28},
-  };
-  Object.entries(positions).forEach(([cat, pos])=>{
-    const layer = document.getElementById(cat === 'tops' ? 'top-layer' :
-      cat === 'bottoms' ? 'bottom-layer' :
-      cat === 'shoes' ? 'shoes-layer' :
-      cat === 'hair' ? 'hair-layer' :
-      'accessory-layer');
-    if (!layer) return;
-    const idx = outfit[cat];
-    if (idx === null || idx === undefined) { layer.innerHTML = ''; return; }
-    const item = wardrobe[gender][cat]?.[idx];
-    if (!item) { layer.innerHTML = ''; return; }
-    layer.innerHTML = `<text x="${pos.x}" y="${pos.y}" font-size="${pos.size}" text-anchor="middle" dominant-baseline="middle">${item.emoji}</text>`;
-  });
-  // bags special layer
-  const bagLayer = document.getElementById('accessory-layer');
-  // accessories + bags both use accessory-layer, combine them
-  const accIdx = outfit['accessories'];
-  const bagIdx = outfit['bags'];
-  let combined = '';
-  if (accIdx !== null && accIdx !== undefined) {
-    const item = wardrobe[gender]['accessories']?.[accIdx];
-    if (item) combined += `<text x="75" y="68" font-size="28" text-anchor="middle" dominant-baseline="middle">${item.emoji}</text>`;
+  // Draw real SVG clothing shapes on the character instead of emoji
+
+  // ── HAIR ──
+  const hairLayer = document.getElementById('hair-layer');
+  if (hairLayer) {
+    const idx = outfit['hair'];
+    if (idx === null || idx === undefined) {
+      hairLayer.innerHTML = '';
+    } else {
+      const item = wardrobe[gender]['hair']?.[idx];
+      hairLayer.innerHTML = item ? getHairSVG(item.name) : '';
+    }
   }
-  if (bagIdx !== null && bagIdx !== undefined) {
-    const item = wardrobe[gender]['bags']?.[bagIdx];
-    if (item) combined += `<text x="130" y="160" font-size="28" text-anchor="middle" dominant-baseline="middle">${item.emoji}</text>`;
+
+  // ── TOPS ──
+  const topLayer = document.getElementById('top-layer');
+  if (topLayer) {
+    const idx = outfit['tops'];
+    if (idx === null || idx === undefined) {
+      topLayer.innerHTML = '';
+    } else {
+      const item = wardrobe[gender]['tops']?.[idx];
+      topLayer.innerHTML = item ? getTopSVG(item.name) : '';
+    }
   }
-  if (bagLayer) bagLayer.innerHTML = combined;
+
+  // ── BOTTOMS ──
+  const bottomLayer = document.getElementById('bottom-layer');
+  if (bottomLayer) {
+    const idx = outfit['bottoms'];
+    if (idx === null || idx === undefined) {
+      bottomLayer.innerHTML = '';
+    } else {
+      const item = wardrobe[gender]['bottoms']?.[idx];
+      bottomLayer.innerHTML = item ? getBottomSVG(item.name) : '';
+    }
+  }
+
+  // ── SHOES ──
+  const shoesLayer = document.getElementById('shoes-layer');
+  if (shoesLayer) {
+    const idx = outfit['shoes'];
+    if (idx === null || idx === undefined) {
+      shoesLayer.innerHTML = '';
+    } else {
+      const item = wardrobe[gender]['shoes']?.[idx];
+      shoesLayer.innerHTML = item ? getShoeSVG(item.name) : '';
+    }
+  }
+
+  // ── ACCESSORIES + BAGS ──
+  const accLayer = document.getElementById('accessory-layer');
+  if (accLayer) {
+    let combined = '';
+    const accIdx = outfit['accessories'];
+    if (accIdx !== null && accIdx !== undefined) {
+      const item = wardrobe[gender]['accessories']?.[accIdx];
+      if (item) combined += `<text x="75" y="72" font-size="22" text-anchor="middle" dominant-baseline="middle">${item.emoji}</text>`;
+    }
+    const bagIdx = outfit['bags'];
+    if (bagIdx !== null && bagIdx !== undefined) {
+      const item = wardrobe[gender]['bags']?.[bagIdx];
+      if (item) combined += `<text x="128" y="158" font-size="24" text-anchor="middle" dominant-baseline="middle">${item.emoji}</text>`;
+    }
+    accLayer.innerHTML = combined;
+  }
+}
+
+// ── Clothing color helper ──
+function getItemColor(name) {
+  const n = name.toLowerCase();
+  const colorMap = [
+    [['black','dark','spooky','shadow','ripped','witch'],     '#1a1a1a'],
+    [['white','ivory','snow','frost','pure','pearl'],         '#f0f0f0'],
+    [['pink','blush','rose','cherry blossom','strawberry'],   '#FFB3C6'],
+    [['hot pink','neon pink','pop'],                          '#FF1493'],
+    [['red','crimson','scarlet','flame'],                     '#E63946'],
+    [['blue','denim','cobalt','navy','french'],                '#4A7EC0'],
+    [['light blue','sky','powder'],                           '#89CFF0'],
+    [['purple','violet','lavender','lilac','velvet'],         '#9B59B6'],
+    [['gold','yellow','honey','sun','royal'],                  '#FFD700'],
+    [['green','emerald','sage','forest','cottagecore'],        '#5CB85C'],
+    [['mint','seafoam'],                                       '#98D8C8'],
+    [['orange','rust','copper','pumpkin','terra'],             '#D46A2A'],
+    [['silver','metallic','chrome','shimmer'],                 '#A8A8C0'],
+    [['rainbow','multi','colorful','ombre'],                   '#FF9EB5'],
+    [['galaxy','space','cosmic','night'],                      '#1A0050'],
+    [['teal','turquoise','mermaid','aqua'],                    '#008080'],
+    [['brown','chocolate','caramel','latte'],                  '#8B4513'],
+    [['beige','tan','nude','sand'],                            '#D2B48C'],
+    [['gray','grey','slate'],                                  '#808080'],
+    [['cream','butter','vanilla'],                             '#FFF8DC'],
+    [['harajuku','kawaii','tokyo'],                            '#FF4F81'],
+    [['miami','tropical'],                                     '#FF4081'],
+    [['tartan','plaid','london'],                              '#6B1A1A'],
+  ];
+  for (const [kws, c] of colorMap) {
+    if (kws.some(k => n.includes(k))) return c;
+  }
+  return '#C084FC'; // default
+}
+
+// ── Hair SVG ──
+function getHairSVG(name) {
+  const n = name.toLowerCase();
+  const color = getItemColor(name);
+  const cx=75, cy=44;
+
+  // top cap (covers top of head, sits behind face)
+  const topCap = `<ellipse cx="${cx}" cy="${cy-18}" rx="29" ry="22" fill="${color}"/>`;
+
+  if (n.includes('bun') || n.includes('space bun')) {
+    return `<ellipse cx="${cx}" cy="${cy-16}" rx="27" ry="12" fill="${color}"/>` +
+           `<circle cx="${cx-28}" cy="${cy-30}" r="11" fill="${color}"/>` +
+           `<circle cx="${cx+28}" cy="${cy-30}" r="11" fill="${color}"/>`;
+  }
+  if (n.includes('updo') || n.includes('royal')) {
+    return topCap +
+           `<ellipse cx="${cx}" cy="${cy-44}" rx="16" ry="14" fill="${color}"/>`;
+  }
+  if (n.includes('ponytail')) {
+    return topCap +
+           `<path d="M ${cx+22} ${cy-24} Q ${cx+55} ${cy-38} ${cx+50} ${cy+35}" stroke="${color}" stroke-width="11" fill="none" stroke-linecap="round"/>`;
+  }
+  if (n.includes('bob') || n.includes('hime') || n.includes('short')) {
+    return topCap +
+           `<rect x="${cx-32}" y="${cy-14}" width="13" height="38" rx="7" fill="${color}"/>` +
+           `<rect x="${cx+19}" y="${cy-14}" width="13" height="38" rx="7" fill="${color}"/>`;
+  }
+  if (n.includes('spik') || n.includes('wild') || n.includes('fade')) {
+    return `<polygon points="${cx-27},${cy-5} ${cx-18},${cy-48} ${cx-8},${cy-26} ${cx},${cy-54} ${cx+8},${cy-26} ${cx+18},${cy-48} ${cx+27},${cy-5}" fill="${color}"/>`;
+  }
+  if (n.includes('braid')) {
+    return topCap +
+           `<path d="M ${cx} ${cy-18} Q ${cx-18} ${cy+15} ${cx-5} ${cy+55} Q ${cx+10} ${cy+85} ${cx} ${cy+115}" stroke="${color}" stroke-width="13" fill="none" stroke-linecap="round"/>`;
+  }
+  if (n.includes('highlights') || n.includes('ombre') || n.includes('rainbow')) {
+    const c2 = n.includes('silver') ? '#DDEEFF' : n.includes('rainbow') ? '#C084FC' : '#C084FC';
+    return topCap +
+           `<rect x="${cx-33}" y="${cy-14}" width="13" height="105" rx="7" fill="${color}"/>` +
+           `<rect x="${cx+20}" y="${cy-14}" width="13" height="105" rx="7" fill="${c2}"/>`;
+  }
+  // default: long flowing hair
+  return topCap +
+         `<rect x="${cx-33}" y="${cy-14}" width="13" height="105" rx="7" fill="${color}"/>` +
+         `<rect x="${cx+20}" y="${cy-14}" width="13" height="105" rx="7" fill="${color}"/>`;
+}
+
+// ── Tops SVG ──
+function getTopSVG(name) {
+  const n = name.toLowerCase();
+  const color = getItemColor(name);
+
+  if (n.includes('bikini') || n.includes('swim shirt') || n.includes('bra')) {
+    return `<rect x="44" y="84" width="62" height="32" rx="8" fill="${color}"/>`;
+  }
+  if (n.includes('tank') || n.includes('tube') || n.includes('corset')) {
+    return `<rect x="47" y="84" width="56" height="68" rx="6" fill="${color}"/>`;
+  }
+  if (n.includes('crop')) {
+    return `<rect x="40" y="84" width="70" height="42" rx="6" fill="${color}"/>` +
+           `<rect x="18" y="86" width="22" height="28" rx="8" fill="${color}"/>` +
+           `<rect x="110" y="86" width="22" height="28" rx="8" fill="${color}"/>`;
+  }
+  if (n.includes('puffer') || n.includes('jacket') || n.includes('blazer')) {
+    const c2 = color === '#f0f0f0' ? '#e0e0e0' : adjustColor(color, -20);
+    return `<rect x="36" y="82" width="78" height="76" rx="8" fill="${color}"/>` +
+           `<rect x="14" y="84" width="24" height="54" rx="9" fill="${color}"/>` +
+           `<rect x="112" y="84" width="24" height="54" rx="9" fill="${color}"/>` +
+           `<rect x="70" y="82" width="10" height="76" fill="${c2}" opacity="0.3"/>`;
+  }
+  if (n.includes('sweater') || n.includes('knit') || n.includes('cozy')) {
+    const c2 = adjustColor(color, -15);
+    return `<rect x="38" y="84" width="74" height="74" rx="12" fill="${color}"/>` +
+           `<rect x="15" y="84" width="25" height="57" rx="10" fill="${color}"/>` +
+           `<rect x="110" y="84" width="25" height="57" rx="10" fill="${color}"/>` +
+           `<rect x="38" y="150" width="74" height="8" rx="4" fill="${c2}" opacity="0.5"/>`;
+  }
+  if (n.includes('gown') || n.includes('dress')) {
+    return `<rect x="36" y="84" width="78" height="150" rx="8" fill="${color}"/>` +
+           `<rect x="14" y="86" width="24" height="44" rx="9" fill="${color}"/>` +
+           `<rect x="112" y="86" width="24" height="44" rx="9" fill="${color}"/>`;
+  }
+  if (n.includes('hoodie')) {
+    return `<rect x="38" y="84" width="74" height="74" rx="10" fill="${color}"/>` +
+           `<rect x="15" y="84" width="25" height="57" rx="10" fill="${color}"/>` +
+           `<rect x="110" y="84" width="25" height="57" rx="10" fill="${color}"/>` +
+           `<ellipse cx="75" cy="84" rx="20" ry="10" fill="${adjustColor(color,-10)}"/>`;
+  }
+  // default shirt / blouse / tee
+  return `<rect x="40" y="84" width="70" height="72" rx="6" fill="${color}"/>` +
+         `<rect x="18" y="86" width="22" height="46" rx="8" fill="${color}"/>` +
+         `<rect x="110" y="86" width="22" height="46" rx="8" fill="${color}"/>`;
+}
+
+// ── Bottoms SVG ──
+function getBottomSVG(name) {
+  const n = name.toLowerCase();
+  const color = getItemColor(name);
+
+  if (n.includes('shorts') || n.includes('cut-off') || n.includes('board')) {
+    return `<rect x="44" y="158" width="62" height="12" rx="4" fill="${adjustColor(color,-10)}"/>` +
+           `<rect x="44" y="164" width="27" height="36" rx="6" fill="${color}"/>` +
+           `<rect x="79" y="164" width="27" height="36" rx="6" fill="${color}"/>`;
+  }
+  if (n.includes('legging')) {
+    return `<rect x="44" y="158" width="62" height="10" rx="4" fill="${adjustColor(color,-10)}"/>` +
+           `<rect x="47" y="164" width="22" height="72" rx="5" fill="${color}"/>` +
+           `<rect x="81" y="164" width="22" height="72" rx="5" fill="${color}"/>`;
+  }
+  if (n.includes('maxi') || n.includes('long') || n.includes('gown') || n.includes('ball gown')) {
+    return `<polygon points="38,158 112,158 122,242 28,242" fill="${color}" opacity="0.95"/>` +
+           `<rect x="38" y="155" width="74" height="14" rx="5" fill="${adjustColor(color,-10)}"/>`;
+  }
+  if (n.includes('mini') || (n.includes('skirt') && (n.includes('mini') || n.includes('denim') || n.includes('pleated')))) {
+    return `<rect x="38" y="155" width="74" height="14" rx="5" fill="${adjustColor(color,-10)}"/>` +
+           `<polygon points="40,162 110,162 118,210 32,210" fill="${color}" opacity="0.95"/>`;
+  }
+  if (n.includes('skirt')) {
+    return `<rect x="38" y="155" width="74" height="14" rx="5" fill="${adjustColor(color,-10)}"/>` +
+           `<polygon points="40,162 110,162 120,232 30,232" fill="${color}" opacity="0.92"/>`;
+  }
+  // default pants / jeans / trousers
+  return `<rect x="44" y="158" width="62" height="12" rx="4" fill="${adjustColor(color,-15)}"/>` +
+         `<rect x="44" y="166" width="27" height="70" rx="6" fill="${color}"/>` +
+         `<rect x="79" y="166" width="27" height="70" rx="6" fill="${color}"/>`;
+}
+
+// ── Shoes SVG ──
+function getShoeSVG(name) {
+  const n = name.toLowerCase();
+  const color = getItemColor(name);
+
+  if (n.includes('heel') || n.includes('pump') || n.includes('wedge') || n.includes('stiletto')) {
+    return `<ellipse cx="55" cy="234" rx="14" ry="5" fill="${color}"/>` +
+           `<ellipse cx="91" cy="234" rx="14" ry="5" fill="${color}"/>` +
+           `<rect x="61" y="225" width="4" height="11" rx="2" fill="${color}"/>` +
+           `<rect x="97" y="225" width="4" height="11" rx="2" fill="${color}"/>`;
+  }
+  if (n.includes('boot')) {
+    return `<rect x="41" y="216" width="28" height="22" rx="4" fill="${color}"/>` +
+           `<rect x="77" y="216" width="28" height="22" rx="4" fill="${color}"/>` +
+           `<rect x="39" y="228" width="32" height="8" rx="4" fill="${adjustColor(color,-15)}"/>` +
+           `<rect x="75" y="228" width="32" height="8" rx="4" fill="${adjustColor(color,-15)}"/>`;
+  }
+  if (n.includes('sneaker') || n.includes('trainer') || n.includes('cleat')) {
+    const c2 = color === '#f0f0f0' ? '#d0d0d0' : '#ffffff';
+    return `<rect x="40" y="226" width="32" height="12" rx="6" fill="${color}"/>` +
+           `<rect x="76" y="226" width="32" height="12" rx="6" fill="${color}"/>` +
+           `<rect x="44" y="220" width="20" height="9" rx="4" fill="${c2}" opacity="0.7"/>` +
+           `<rect x="80" y="220" width="20" height="9" rx="4" fill="${c2}" opacity="0.7"/>`;
+  }
+  if (n.includes('flat') || n.includes('ballet') || n.includes('mary') || n.includes('loafer')) {
+    return `<ellipse cx="55" cy="234" rx="17" ry="5" fill="${color}"/>` +
+           `<ellipse cx="91" cy="234" rx="17" ry="5" fill="${color}"/>` +
+           `<rect x="44" y="227" width="22" height="8" rx="4" fill="${color}"/>` +
+           `<rect x="80" y="227" width="22" height="8" rx="4" fill="${color}"/>`;
+  }
+  if (n.includes('sandal') || n.includes('flip') || n.includes('slide')) {
+    return `<ellipse cx="55" cy="235" rx="16" ry="4" fill="${color}"/>` +
+           `<ellipse cx="91" cy="235" rx="16" ry="4" fill="${color}"/>` +
+           `<rect x="48" y="229" width="4" height="8" rx="2" fill="${color}"/>` +
+           `<rect x="84" y="229" width="4" height="8" rx="2" fill="${color}"/>`;
+  }
+  // default
+  return `<ellipse cx="55" cy="233" rx="16" ry="6" fill="${color}"/>` +
+         `<ellipse cx="91" cy="233" rx="16" ry="6" fill="${color}"/>`;
+}
+
+// ── Color adjustment helper ──
+function adjustColor(hex, amount) {
+  if (!hex || hex.charAt(0) !== '#' || hex.length < 7) return hex || '#C084FC';
+  const r = Math.max(0, Math.min(255, parseInt(hex.slice(1,3),16) + amount));
+  const g = Math.max(0, Math.min(255, parseInt(hex.slice(3,5),16) + amount));
+  const b = Math.max(0, Math.min(255, parseInt(hex.slice(5,7),16) + amount));
+  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
 }
 
 function renderVIPGrid() {
@@ -1302,6 +1605,7 @@ function setGender(g, btn) {
   document.querySelectorAll('.gender-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderItems(); renderWornItems();
+  updateZoneDisplays();
 }
 
 function setCategory(cat) {
@@ -1361,7 +1665,20 @@ function removeFromBag(i) { shoppingBag.splice(i,1); renderBag(); renderItems();
 
 function resetOutfit() { outfit={}; renderItems(); renderWornItems(); }
 
-function wearVIPItem(idx) { spawnSparkles(6); setMsg(`✨ ${vipItems[idx].name} — VIP exclusive! 👑`,'#ffd700'); }
+function wearVIPItem(idx) {
+  const vip = vipItems[idx];
+  const cat = vip.type;
+  if (!wardrobe[gender][cat]) wardrobe[gender][cat] = [];
+  let wIdx = wardrobe[gender][cat].findIndex(i => i.name === vip.name);
+  if (wIdx === -1) {
+    wardrobe[gender][cat].push({ emoji: vip.emoji, name: vip.name, detail: '👑 VIP exclusive!', theme: 'all' });
+    wIdx = wardrobe[gender][cat].length - 1;
+  }
+  outfit[cat] = wIdx;
+  currentCategory = cat;
+  renderItems(); renderWornItems(); spawnSparkles(6);
+  setMsg(`✨ ${vip.name} — now wearing it! 👑`, '#ffd700');
+}
 
 // ── Favorites ──
 function saveToFavorites() {
@@ -1458,8 +1775,19 @@ function handleCode(val, msgEl) {
     return true;
   }
   if (codes[val]) {
-    msgEl.style.color='#c084fc'; msgEl.textContent=codes[val].msg+' ✨';
-    spawnSparkles(8); return true;
+    const codeItem = codes[val];
+    const cat = codeItem.type;
+    if (!wardrobe[gender][cat]) wardrobe[gender][cat] = [];
+    let idx = wardrobe[gender][cat].findIndex(i => i.name === codeItem.name);
+    if (idx === -1) {
+      wardrobe[gender][cat].push({ emoji: codeItem.emoji, name: codeItem.name, detail: '🔐 Code unlock!', theme: 'all' });
+      idx = wardrobe[gender][cat].length - 1;
+    }
+    outfit[cat] = idx;
+    currentCategory = cat;
+    renderItems(); renderWornItems(); spawnSparkles(8);
+    msgEl.style.color = '#c084fc'; msgEl.textContent = codeItem.msg + ' — now wearing it! ✨';
+    return true;
   }
   msgEl.style.color='#f87171'; msgEl.textContent='Hmm, try another code! 🔐';
   return false;
@@ -1571,7 +1899,11 @@ function judgeBFF() {
 
 // ── Secrets & Riddles ──
 function foundSecret(code) {
-  if (codes[code]) { setMsg('🔍 Secret found! '+codes[code].msg,'#c084fc'); spawnSparkles(8); }
+  if (codes[code]) {
+    const msgEl = document.getElementById('codeMsg');
+    handleCode(code, msgEl);
+    spawnSparkles(8);
+  }
 }
 
 function showRiddle() {
@@ -1621,17 +1953,39 @@ const stationLabels = {
   bags:'👜 Bag Stand', hair:'💇 Hair Station', accessories:'💍 Accessories'
 };
 
-function openStation(cat) {
+function walkToZone(cat) {
   currentCategory = cat;
-  renderCategoryTabs(); // keep hidden tabs in sync
-  // highlight active station
-  document.querySelectorAll('.station').forEach(s=>s.classList.remove('active-station'));
-  const st = document.getElementById('station-'+cat);
-  if (st) st.classList.add('active-station');
-  // build popup
-  document.getElementById('popupTitle').textContent = stationLabels[cat]||cat;
-  renderPopupItems();
-  document.getElementById('roomPopupOverlay').classList.add('show');
+  renderCategoryTabs();
+  // Highlight active zone
+  document.querySelectorAll('.wzone').forEach(z => z.classList.remove('wzone-active'));
+  const wz = document.getElementById('wzone-' + cat);
+  if (wz) wz.classList.add('wzone-active');
+  // Move character to zone
+  const charEl = document.getElementById('wroomChar');
+  if (charEl && wz) {
+    const scene = document.getElementById('wroomScene');
+    const zoneRect = wz.getBoundingClientRect();
+    const sceneRect = scene.getBoundingClientRect();
+    const targetX = zoneRect.left - sceneRect.left + (zoneRect.width / 2) - 16;
+    charEl.style.left = targetX + 'px';
+    // Scroll to show character
+    const scrollEl = document.getElementById('wroomScroll');
+    if (scrollEl) setTimeout(() => { scrollEl.scrollLeft = Math.max(0, targetX - 80); }, 100);
+  }
+  // Show speech bubble
+  const bubbleEl = document.getElementById('wroomBubble');
+  if (bubbleEl) {
+    const bubbles = { hair:'Love this hair!', accessories:'So sparkly!', tops:'Cute top!', bottoms:'Perfect!', shoes:'Need these!', bags:'So cute!' };
+    bubbleEl.textContent = bubbles[cat] || '✨';
+    bubbleEl.classList.add('show');
+    setTimeout(() => bubbleEl.classList.remove('show'), 500);
+  }
+  // Open popup after walk animation
+  setTimeout(() => {
+    document.getElementById('popupTitle').textContent = stationLabels[cat] || cat;
+    renderPopupItems();
+    document.getElementById('roomPopupOverlay').classList.add('show');
+  }, 580);
 }
 
 function renderPopupItems() {
@@ -1661,7 +2015,7 @@ function renderPopupItems() {
 function selectItemFromPopup(idx) {
   selectItem(idx);
   renderPopupItems();
-  updateStationCounts();
+  updateZoneDisplays();
 }
 
 function addToBagFromPopup(idx) {
@@ -1674,22 +2028,30 @@ function closeRoomPopup(e) {
 }
 function closeRoomPopupDirect() {
   document.getElementById('roomPopupOverlay').classList.remove('show');
-  document.querySelectorAll('.station').forEach(s=>s.classList.remove('active-station'));
+  document.querySelectorAll('.wzone').forEach(z=>z.classList.remove('wzone-active'));
 }
 
-function updateStationCounts() {
-  Object.keys(categories).forEach(cat=>{
-    const el = document.getElementById('count-'+cat);
-    if (!el) return;
-    const idx = outfit[cat];
-    if (idx!==null && idx!==undefined) {
-      const item = wardrobe[gender][cat]?.[idx];
-      el.textContent = item ? item.emoji : '';
-    } else {
-      el.textContent = '';
+function updateZoneDisplays() {
+  Object.keys(categories).forEach(cat => {
+    // Worn dot
+    const wornDot = document.getElementById('wworn-' + cat);
+    if (wornDot) {
+      const idx = outfit[cat];
+      wornDot.classList.toggle('show', idx !== null && idx !== undefined);
+    }
+    // Hangers - show first 4 items from category
+    const hangersEl = document.getElementById('whangers-' + cat);
+    if (hangersEl) {
+      const items = wardrobe[gender][cat] || [];
+      const filtered = currentTheme === 'all' ? items : items.filter(i => i.theme === 'all' || i.theme === currentTheme);
+      hangersEl.innerHTML = filtered.slice(0, 4).map(item => `<span class="wzone-hanger">${item.emoji}</span>`).join('');
     }
   });
+  // Update walking character gender
+  const charEmoji = document.getElementById('wroomCharEmoji');
+  if (charEmoji) charEmoji.textContent = gender === 'girl' ? '👧' : '👦';
 }
+function updateStationCounts() { updateZoneDisplays(); }
 
 
 // ── Init ──
